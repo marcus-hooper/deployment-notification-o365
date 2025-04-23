@@ -8,7 +8,7 @@ runs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-      # Set up Python environment
+    # Set up Python environment
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -21,21 +21,44 @@ runs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
       shell: bash
-      continue-on-error: false
 
     # Run the notification script
     - name: Send notification
       run: |
         python send_notification.py
       env:
-        GITHUB_ACTOR: ${{ github.actor }}
-        GITHUB_REPOSITORY: ${{ github.repository }}
-        GITHUB_ENVIRONMENT: development-global
-        NOTIFICATION_TO: ${{ vars.NOTIFICATION_TO }}
-        NOTIFICATION_FROM: ${{ vars.NOTIFICATION_FROM }}
-        AZURE_TENANT_ID: ${{ vars.NOTIFICATION_AZURE_TENANT_ID }}
-        AZURE_CLIENT_ID: ${{ vars.NOTIFICATION_AZURE_CLIENT_ID }}
-        AZURE_CLIENT_SECRET: ${{ secrets.NOTIFICATION_AZURE_CLIENT_SECRET }}
-        # GITHUB_COMMIT_MESSAGE: ${{ github.event.head_commit && github.event.head_commit.message || 'No commit message available' }}
+        GITHUB_ACTOR: ${{ inputs.github_actor }}
+        GITHUB_REPOSITORY: ${{ inputs.github_repository }}
+        GITHUB_ENVIRONMENT: ${{ inputs.github_environment }}
+        NOTIFICATION_TO: ${{ inputs.notification_to }}
+        NOTIFICATION_FROM: ${{ inputs.notification_from }}
+        AZURE_TENANT_ID: ${{ inputs.azure_tenant_id }}
+        AZURE_CLIENT_ID: ${{ inputs.azure_client_id }}
+        AZURE_CLIENT_SECRET: ${{ inputs.azure_client_secret }}
       shell: bash
-      continue-on-error: false
+
+inputs:
+  github_actor:
+    description: "The GitHub actor triggering the action."
+    required: true
+  github_repository:
+    description: "The GitHub repository name."
+    required: true
+  github_environment:
+    description: "The deployment environment (e.g., production, staging)."
+    required: true
+  notification_to:
+    description: "Comma-separated list of recipient email addresses."
+    required: true
+  notification_from:
+    description: "The sender's email address."
+    required: true
+  azure_tenant_id:
+    description: "Azure Active Directory Tenant ID."
+    required: true
+  azure_client_id:
+    description: "Azure Active Directory Client ID."
+    required: true
+  azure_client_secret:
+    description: "Azure Active Directory Client Secret."
+    required: true
