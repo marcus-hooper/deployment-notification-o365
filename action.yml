@@ -1,0 +1,41 @@
+name: "Send Deployment Notification"
+description: "A GitHub Action to send deployment notifications via email using Microsoft Graph API and Azure AD."
+author: "marcus-hooper"
+runs:
+  using: "composite"
+  steps:
+    # Checkout the repository
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+      # Set up Python environment
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.13"
+        cache: "pip"
+
+    # Install dependencies
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+      shell: bash
+      continue-on-error: false
+
+    # Run the notification script
+    - name: Send notification
+      run: |
+        python send_notification.py
+      env:
+        GITHUB_ACTOR: ${{ github.actor }}
+        GITHUB_REPOSITORY: ${{ github.repository }}
+        GITHUB_ENVIRONMENT: development-global
+        NOTIFICATION_TO: ${{ vars.NOTIFICATION_TO }}
+        NOTIFICATION_FROM: ${{ vars.NOTIFICATION_FROM }}
+        AZURE_TENANT_ID: ${{ vars.NOTIFICATION_AZURE_TENANT_ID }}
+        AZURE_CLIENT_ID: ${{ vars.NOTIFICATION_AZURE_CLIENT_ID }}
+        AZURE_CLIENT_SECRET: ${{ secrets.NOTIFICATION_AZURE_CLIENT_SECRET }}
+        # GITHUB_COMMIT_MESSAGE: ${{ github.event.head_commit && github.event.head_commit.message || 'No commit message available' }}
+      shell: bash
+      continue-on-error: false
