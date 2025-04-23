@@ -4,9 +4,9 @@ author: "marcus-hooper"
 runs:
   using: "composite"
   steps:
-    # Checkout the repository
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    # # Checkout the repository
+    # - name: Checkout repository
+    #   uses: actions/checkout@v4
 
     # Set up Python environment
     - name: Set up Python
