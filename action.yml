@@ -4,22 +4,14 @@ author: "marcus-hooper"
 runs:
   using: "composite"
   steps:
-    # # Checkout the repository
-    # - name: Checkout repository
-    #   uses: actions/checkout@v4
-
     # Set up Python environment
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: "3.13"
-        # cache: "pip"
 
     # Install dependencies
     - name: Install dependencies
-    #   run: |
-    #     python pip install -r ${{ github.action_path }}\requirements.txt
-    #   shell: powershell
       run: |
         python -m pip install --upgrade pip
         pip install -r ${{ github.action_path }}\requirements.txt
@@ -39,40 +31,3 @@ runs:
         AZURE_CLIENT_ID: ${{ env.AZURE_CLIENT_ID }}
         AZURE_CLIENT_SECRET: ${{ env.AZURE_CLIENT_SECRET }}
       shell: powershell
-
-#       env:
-#         GITHUB_ACTOR: ${{ inputs.github_actor }}
-#         GITHUB_REPOSITORY: ${{ inputs.github_repository }}
-#         GITHUB_ENVIRONMENT: ${{ inputs.github_environment }}
-#         NOTIFICATION_TO: ${{ inputs.notification_to }}
-#         NOTIFICATION_FROM: ${{ inputs.notification_from }}
-#         AZURE_TENANT_ID: ${{ inputs.azure_tenant_id }}
-#         AZURE_CLIENT_ID: ${{ inputs.azure_client_id }}
-#         AZURE_CLIENT_SECRET: ${{ inputs.azure_client_secret }}
-#       shell: bash
-
-# inputs:
-#   github_actor:
-#     description: "The GitHub actor triggering the action."
-#     required: true
-#   github_repository:
-#     description: "The GitHub repository name."
-#     required: true
-#   github_environment:
-#     description: "The deployment environment (e.g., production, staging)."
-#     required: true
-#   notification_to:
-#     description: "Comma-separated list of recipient email addresses."
-#     required: true
-#   notification_from:
-#     description: "The sender's email address."
-#     required: true
-#   azure_tenant_id:
-#     description: "Azure Active Directory Tenant ID."
-#     required: true
-#   azure_client_id:
-#     description: "Azure Active Directory Client ID."
-#     required: true
-#   azure_client_secret:
-#     description: "Azure Active Directory Client Secret."
-#     required: true
