@@ -35,10 +35,18 @@ def get_formatted_time():
 
 
 # Email Preparation Functions
-def prepare_email_content(repository, environment, actor, commit_message):
+def prepare_email_content(repository, environment, actor):
     """Prepare the email subject and content."""
     formatted_time = get_formatted_time()
     subject = f"Deployment Successful: {repository} to {environment} on {formatted_time}"
+# get contents of commit_message.txt file
+    commit_message = ""
+    try:
+        with open("commit_message.txt", "r") as file:
+            commit_message = file.read().strip()
+    except FileNotFoundError:
+        logging.error("commit_message.txt file not found. No commit message will be included.")
+        
     content = (
         f"Repository: {repository}\n"
         f"Environment: {environment}\n"
@@ -46,7 +54,7 @@ def prepare_email_content(repository, environment, actor, commit_message):
         f"Status: Successful\n"
         f"Started by: {actor}\n"
         f"Repository URL: https://github.com/{repository}\n\n"
-        f"Commit Message: {commit_message}\n\n"
+        f"Recent Commit Messages: \n {commit_message}\n"
     )
     return subject, content
 
@@ -126,10 +134,10 @@ def main():
         tenant_id = get_env_variable("AZURE_TENANT_ID")
         client_id = get_env_variable("AZURE_CLIENT_ID")
         client_secret = get_env_variable("AZURE_CLIENT_SECRET")
-        commit_message = get_env_variable("COMMIT_MESSAGE")
+        # commit_message = get_env_variable("COMMIT_MESSAGE")
 
         # Prepare email details
-        subject, content = prepare_email_content(github_repository, github_environment, github_actor, commit_message)
+        subject, content = prepare_email_content(github_repository, github_environment, github_actor)
         to_recipients = prepare_recipients(notification_to)
 
         # Initialize Graph client
