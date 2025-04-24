@@ -28,7 +28,7 @@ runs:
     # Run the notification script
     - name: Send notification
       run: |
-        python ${{ github.action_path }}\send_notification.py
+        python ${{ github.action_path }}\send_deployment_notification.py
       env:
         GITHUB_ACTOR: ${{ env.GITHUB_ACTOR }}
         GITHUB_REPOSITORY: ${{ env.GITHUB_REPOSITORY }}
