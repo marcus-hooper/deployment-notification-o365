@@ -19,13 +19,13 @@ runs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
+        ${{ github.action_path }}\pip install -r requirements.txt
       shell: bash
 
     # Run the notification script
     - name: Send notification
       run: |
-        python send_notification.py
+        python ${{ github.action_path }}\send_notification.py
       env:
         GITHUB_ACTOR: ${{ env.GITHUB_ACTOR }}
         GITHUB_REPOSITORY: ${{ env.GITHUB_REPOSITORY }}
