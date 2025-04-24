@@ -54,7 +54,7 @@ def prepare_email_content(repository, environment, actor):
         f"Status: Successful\n"
         f"Started by: {actor}\n"
         f"Repository URL: https://github.com/{repository}\n\n"
-        f"Recent Commit Messages: \n {commit_message}\n"
+        f"Recent Commit Messages: \n{commit_message}\n"
     )
     return subject, content
 
