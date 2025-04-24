@@ -35,7 +35,7 @@ def get_formatted_time():
 
 
 # Email Preparation Functions
-def prepare_email_content(repository, environment, actor):
+def prepare_email_content(repository, environment, actor, commit_message):
     """Prepare the email subject and content."""
     formatted_time = get_formatted_time()
     subject = f"Deployment Successful: {repository} to {environment} on {formatted_time}"
@@ -45,7 +45,8 @@ def prepare_email_content(repository, environment, actor):
         f"Deployment Time: {formatted_time}\n"
         f"Status: Successful\n"
         f"Started by: {actor}\n"
-        f"Repository URL: https://github.com/{repository}\n"
+        f"Repository URL: https://github.com/{repository}\n\n"
+        f"Commit Message: {commit_message}\n\n"
     )
     return subject, content
 
@@ -125,9 +126,10 @@ def main():
         tenant_id = get_env_variable("AZURE_TENANT_ID")
         client_id = get_env_variable("AZURE_CLIENT_ID")
         client_secret = get_env_variable("AZURE_CLIENT_SECRET")
+        commit_message = get_env_variable("COMMIT_MESSAGE")
 
         # Prepare email details
-        subject, content = prepare_email_content(github_repository, github_environment, github_actor)
+        subject, content = prepare_email_content(github_repository, github_environment, github_actor, commit_message)
         to_recipients = prepare_recipients(notification_to)
 
         # Initialize Graph client
