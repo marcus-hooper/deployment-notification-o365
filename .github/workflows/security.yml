@@ -1,0 +1,175 @@
+name: Security
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Run weekly on Wednesday at 6:00 UTC
+    - cron: "0 6 * * 3"
+
+permissions:
+  contents: read
+
+jobs:
+  # Scan dependencies for known vulnerabilities on PRs
+  dependency-review:
+    name: Dependency Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: always
+
+  # OSSF Scorecard for repository security best practices
+  scorecard:
+    name: OSSF Scorecard
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+
+    permissions:
+      contents: read
+      security-events: write
+      id-token: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Run Scorecard
+        uses: ossf/scorecard-action@v2.4.0
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload Scorecard results
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: results.sarif
+
+  # Static analysis for Python
+  script-security:
+    name: Script Security Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Bandit
+        run: pip install bandit
+
+      - name: Run Bandit security scanner
+        run: |
+          echo "Running Bandit security scanner..."
+          bandit -r . -x ./tests,./.venv -f json -o bandit-report.json || true
+          bandit -r . -x ./tests,./.venv -ll
+          echo "Security scan complete"
+
+      - name: Upload Bandit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bandit-security-report
+          path: bandit-report.json
+          if-no-files-found: ignore
+
+      - name: Check for hardcoded secrets
+        run: |
+          echo "Checking for potential hardcoded secrets..."
+
+          PATTERNS=(
+            'password\s*=\s*["\x27][^"\x27]+["\x27]'
+            'api[_-]?key\s*=\s*["\x27][^"\x27]+["\x27]'
+            'secret\s*=\s*["\x27][^"\x27]+["\x27]'
+            'token\s*=\s*["\x27][^"\x27]+["\x27]'
+          )
+
+          ISSUES=0
+          for pattern in "${PATTERNS[@]}"; do
+            if grep -rEn "$pattern" --include="*.py" . 2>/dev/null | grep -v "os.getenv\|get_env_variable\|environ"; then
+              echo "::warning::Potential hardcoded secret found matching pattern: $pattern"
+              ISSUES=$((ISSUES + 1))
+            fi
+          done
+
+          if [ $ISSUES -gt 0 ]; then
+            echo "::error::Found $ISSUES potential hardcoded secret(s)"
+            exit 1
+          fi
+
+          echo "No hardcoded secrets detected"
+
+      - name: Check for unsafe patterns
+        run: |
+          echo "Checking for potentially unsafe patterns..."
+
+          ISSUES=0
+
+          # Check for eval usage
+          if grep -rn "eval(" --include="*.py" . 2>/dev/null; then
+            echo "::warning::Found eval() usage - can execute arbitrary code"
+            ISSUES=$((ISSUES + 1))
+          fi
+
+          # Check for exec usage
+          if grep -rn "exec(" --include="*.py" . 2>/dev/null; then
+            echo "::warning::Found exec() usage - can execute arbitrary code"
+            ISSUES=$((ISSUES + 1))
+          fi
+
+          # Check for shell=True in subprocess
+          if grep -rn "shell=True" --include="*.py" . 2>/dev/null; then
+            echo "::warning::Found shell=True in subprocess - potential command injection"
+            ISSUES=$((ISSUES + 1))
+          fi
+
+          if [ $ISSUES -gt 0 ]; then
+            echo "Found $ISSUES potentially unsafe pattern(s) - review recommended"
+          else
+            echo "No unsafe patterns detected"
+          fi
+
+  # Pip audit for known vulnerabilities
+  pip-audit:
+    name: Pip Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies and pip-audit
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pip-audit
+
+      - name: Run pip-audit
+        run: |
+          pip-audit --desc on

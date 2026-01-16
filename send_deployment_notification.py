@@ -1,7 +1,9 @@
 import asyncio
 import datetime
-import os
 import logging
+import os
+import sys
+
 import pytz
 from azure.identity import ClientSecretCredential
 from msgraph import GraphServiceClient
@@ -39,13 +41,14 @@ def prepare_email_content(repository, environment, actor):
     """Prepare the email subject and content."""
     formatted_time = get_formatted_time()
     subject = f"Deployment Successful: {repository} to {environment} on {formatted_time}"
-# get contents of commit_message.txt file
+
+    # Get contents of commit_message.txt file (optional)
     commit_message = ""
     try:
         with open("commit_message.txt", "r") as file:
             commit_message = file.read().strip()
     except FileNotFoundError:
-        logging.error("commit_message.txt file not found. No commit message will be included.")
+        logging.warning("commit_message.txt not found. No commit message will be included.")
         
     content = (
         f"Repository: {repository}\n"
@@ -134,7 +137,6 @@ def main():
         tenant_id = get_env_variable("AZURE_TENANT_ID")
         client_id = get_env_variable("AZURE_CLIENT_ID")
         client_secret = get_env_variable("AZURE_CLIENT_SECRET")
-        # commit_message = get_env_variable("COMMIT_MESSAGE")
 
         # Prepare email details
         subject, content = prepare_email_content(github_repository, github_environment, github_actor)
@@ -150,6 +152,7 @@ def main():
         asyncio.run(send_email(graph_client, notification_from, request_body))
     except Exception as e:
         logging.error(f"An error occurred while sending the email: {e}")
+        sys.exit(1)
 
 
 # Entry Point
