@@ -1,6 +1,7 @@
-import os
 import re
+
 import pytest
+
 import send_deployment_notification as script
 
 

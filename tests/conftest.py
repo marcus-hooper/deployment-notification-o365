@@ -35,7 +35,7 @@ class MockRecipient:
 sys.modules['msgraph.generated.models.email_address'].EmailAddress = MockEmailAddress
 sys.modules['msgraph.generated.models.recipient'].Recipient = MockRecipient
 
-import pytest
+import pytest  # noqa: E402
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))

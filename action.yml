@@ -3,8 +3,8 @@ description: "A GitHub Action to send deployment notifications via email using M
 author: "marcus-hooper"
 
 branding:
-  icon: "mail"
-  color: "blue"
+  icon: mail
+  color: blue
 
 runs:
   using: "composite"

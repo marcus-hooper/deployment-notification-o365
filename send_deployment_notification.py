@@ -7,12 +7,12 @@ import sys
 import pytz
 from azure.identity import ClientSecretCredential
 from msgraph import GraphServiceClient
-from msgraph.generated.users.item.send_mail.send_mail_post_request_body import SendMailPostRequestBody
-from msgraph.generated.models.message import Message
-from msgraph.generated.models.item_body import ItemBody
 from msgraph.generated.models.body_type import BodyType
-from msgraph.generated.models.recipient import Recipient
 from msgraph.generated.models.email_address import EmailAddress
+from msgraph.generated.models.item_body import ItemBody
+from msgraph.generated.models.message import Message
+from msgraph.generated.models.recipient import Recipient
+from msgraph.generated.users.item.send_mail.send_mail_post_request_body import SendMailPostRequestBody
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -45,11 +45,11 @@ def prepare_email_content(repository, environment, actor):
     # Get contents of commit_message.txt file (optional)
     commit_message = ""
     try:
-        with open("commit_message.txt", "r") as file:
+        with open("commit_message.txt") as file:
             commit_message = file.read().strip()
     except FileNotFoundError:
         logging.warning("commit_message.txt not found. No commit message will be included.")
-        
+
     content = (
         f"Repository: {repository}\n"
         f"Environment: {environment}\n"
@@ -117,7 +117,7 @@ async def send_email(graph_client, sender, request_body):
         if not user_request:
             logging.error("Failed to get user request.")
             raise ValueError("User request initialization failed.")
-        
+
         await user_request.send_mail.post(request_body)
         logging.info("Email sent successfully.")
     except Exception as e:
