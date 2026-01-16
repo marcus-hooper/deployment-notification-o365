@@ -1,6 +1,6 @@
 # Development dependencies
-# Constrain to production requirements
--c requirements.txt
+# Include production requirements
+-r requirements.txt
 
 # Testing
 pytest>=8.0.0
