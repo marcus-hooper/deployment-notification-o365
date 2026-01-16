@@ -82,15 +82,17 @@ jobs:
       - name: Run pytest
         run: |
           if [ -d "tests" ] && [ "$(ls -A tests/*.py 2>/dev/null)" ]; then
-            pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing
+            pytest tests/ -v --cov=. --cov-report=xml --cov-report=term-missing --junitxml=test-results.xml
           else
             echo "No tests found - skipping pytest"
           fi
 
-      - name: Upload coverage report
+      - name: Upload test results
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         if: always()
         with:
-          name: coverage-report
-          path: coverage.xml
+          name: test-results
+          path: |
+            test-results.xml
+            coverage.xml
           if-no-files-found: ignore
