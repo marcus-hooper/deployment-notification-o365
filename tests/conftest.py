@@ -5,35 +5,38 @@ from unittest.mock import MagicMock
 # Mock msgraph modules before importing the script
 # This allows tests to run without the full msgraph-sdk installed
 mock_modules = [
-    'msgraph',
-    'msgraph.generated',
-    'msgraph.generated.users',
-    'msgraph.generated.users.item',
-    'msgraph.generated.users.item.send_mail',
-    'msgraph.generated.users.item.send_mail.send_mail_post_request_body',
-    'msgraph.generated.models',
-    'msgraph.generated.models.message',
-    'msgraph.generated.models.item_body',
-    'msgraph.generated.models.body_type',
-    'msgraph.generated.models.recipient',
-    'msgraph.generated.models.email_address',
+    "msgraph",
+    "msgraph.generated",
+    "msgraph.generated.users",
+    "msgraph.generated.users.item",
+    "msgraph.generated.users.item.send_mail",
+    "msgraph.generated.users.item.send_mail.send_mail_post_request_body",
+    "msgraph.generated.models",
+    "msgraph.generated.models.message",
+    "msgraph.generated.models.item_body",
+    "msgraph.generated.models.body_type",
+    "msgraph.generated.models.recipient",
+    "msgraph.generated.models.email_address",
 ]
 
 for mod_name in mock_modules:
     sys.modules[mod_name] = MagicMock()
+
 
 # Create proper mock classes for the models we actually use in tests
 class MockEmailAddress:
     def __init__(self, address=None):
         self.address = address
 
+
 class MockRecipient:
     def __init__(self, email_address=None):
         self.email_address = email_address
 
+
 # Patch the mocked modules with our test-friendly versions
-sys.modules['msgraph.generated.models.email_address'].EmailAddress = MockEmailAddress
-sys.modules['msgraph.generated.models.recipient'].Recipient = MockRecipient
+sys.modules["msgraph.generated.models.email_address"].EmailAddress = MockEmailAddress
+sys.modules["msgraph.generated.models.recipient"].Recipient = MockRecipient
 
 import pytest  # noqa: E402
 

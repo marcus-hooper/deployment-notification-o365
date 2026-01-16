@@ -67,12 +67,8 @@ def prepare_email_content(repository, environment, actor):
 def prepare_recipients(notification_to):
     """Create a list of Recipient objects."""
     return [
-        Recipient(
-            email_address=EmailAddress(
-                address=email.strip()
-            )
-        )
-        for email in notification_to.split(',')
+        Recipient(email_address=EmailAddress(address=email.strip()))
+        for email in notification_to.split(",")
     ]
 
 
@@ -86,7 +82,7 @@ def initialize_graph_client(tenant_id, client_id, client_secret):
             client_secret=client_secret,
         )
         logging.info("Azure credential initialized successfully.")
-        scopes = ['https://graph.microsoft.com/.default']
+        scopes = ["https://graph.microsoft.com/.default"]
         return GraphServiceClient(credential, scopes=scopes)
     except Exception as e:
         logging.error(f"Failed to initialize Graph client: {e}")
@@ -99,13 +95,10 @@ def prepare_email_request(subject, content, to_recipients):
         return SendMailPostRequestBody(
             message=Message(
                 subject=subject,
-                body=ItemBody(
-                    content_type=BodyType.Text,
-                    content=content
-                ),
+                body=ItemBody(content_type=BodyType.Text, content=content),
                 to_recipients=to_recipients,
             ),
-            save_to_sent_items=True
+            save_to_sent_items=True,
         )
     except Exception as e:
         logging.error(f"Failed to prepare email request body: {e}")
@@ -141,7 +134,9 @@ def main():
         client_secret = get_env_variable("AZURE_CLIENT_SECRET")
 
         # Prepare email details
-        subject, content = prepare_email_content(github_repository, github_environment, github_actor)
+        subject, content = prepare_email_content(
+            github_repository, github_environment, github_actor
+        )
         to_recipients = prepare_recipients(notification_to)
 
         # Initialize Graph client

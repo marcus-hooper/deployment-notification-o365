@@ -95,7 +95,9 @@ class TestPrepareRecipients:
 
     def test_multiple_recipients_with_spaces(self):
         """Should handle comma-separated recipients with spaces."""
-        result = script.prepare_recipients("user1@example.com, user2@example.com, user3@example.com")
+        result = script.prepare_recipients(
+            "user1@example.com, user2@example.com, user3@example.com"
+        )
         assert len(result) == 3
 
     def test_strips_whitespace(self):
