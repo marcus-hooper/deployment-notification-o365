@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
     # Allow manual trigger for debugging
 
+permissions:
+  contents: read
+
 jobs:
   health-check:
     name: Script Health Check

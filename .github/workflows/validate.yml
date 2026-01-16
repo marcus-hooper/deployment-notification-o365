@@ -12,6 +12,9 @@ on:
       - "action.yml"
       - ".github/workflows/validate.yml"
 
+permissions:
+  contents: read
+
 jobs:
   validate-action:
     name: Validate action.yml
