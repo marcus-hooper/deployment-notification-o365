@@ -13,18 +13,40 @@ If you discover a security vulnerability in this project, please report it respo
 ### How to Report
 
 1. **Do not** open a public GitHub issue for security vulnerabilities
-2. Email the maintainer directly or use GitHub's private vulnerability reporting feature
+2. Use [GitHub's private vulnerability reporting](https://github.com/marcus-hooper/deployment-notification-o365/security/advisories/new) to submit a report
 3. Include as much detail as possible:
    - Description of the vulnerability
    - Steps to reproduce
    - Potential impact
    - Suggested fix (if any)
 
-### What to Expect
+### Disclosure Timeline
 
 - Acknowledgment of your report within 48 hours
+- Initial assessment within 7 days
+- Target resolution within 90 days for critical vulnerabilities
 - Regular updates on the progress of addressing the vulnerability
 - Credit in the security advisory (unless you prefer to remain anonymous)
+
+### Scope
+
+The following are considered security vulnerabilities:
+- Authentication or authorization bypasses
+- Credential exposure or leakage
+- Injection vulnerabilities in the script
+- Issues that could compromise email content or recipients
+
+Out of scope:
+- Vulnerabilities in upstream dependencies (report to the respective project)
+- Issues requiring physical access or social engineering
+
+### Security Notifications
+
+Security fixes are announced via:
+- [GitHub Security Advisories](https://github.com/marcus-hooper/deployment-notification-o365/security/advisories)
+- Release notes for patched versions
+
+Dependencies are monitored automatically via Dependabot.
 
 ## Security Considerations
 

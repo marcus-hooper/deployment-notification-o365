@@ -1,13 +1,12 @@
 # Deployment Notification O365
 
 [![CI](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/ci.yml/badge.svg)](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/ci.yml)
-[![Security](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/security.yml/badge.svg)](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/security.yml)
-[![Validate Action](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/validate.yml/badge.svg)](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/validate.yml)
 [![GitHub release](https://img.shields.io/github/v/release/marcus-hooper/deployment-notification-o365)](https://github.com/marcus-hooper/deployment-notification-o365/releases)
-[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/marcus-hooper/deployment-notification-o365/badge)](https://scorecard.dev/viewer/?uri=github.com/marcus-hooper/deployment-notification-o365)
-[![GitHub issues](https://img.shields.io/github/issues/marcus-hooper/deployment-notification-o365)](https://github.com/marcus-hooper/deployment-notification-o365/issues)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![CodeQL](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/codeql.yml/badge.svg)](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/codeql.yml)
+[![Security](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/security.yml/badge.svg)](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/security.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/marcus-hooper/deployment-notification-o365/badge)](https://scorecard.dev/viewer/?uri=github.com/marcus-hooper/deployment-notification-o365)
 
 A GitHub Action that sends deployment notifications via email using Microsoft Graph API and Azure Active Directory.
 
@@ -54,6 +53,48 @@ To include recent commit messages in the notification, create a `commit_message.
     GITHUB_ENVIRONMENT: production
     NOTIFICATION_TO: team@example.com, lead@example.com
     NOTIFICATION_FROM: notifications@example.com
+```
+
+### Complete Workflow Example
+
+Here's a complete deployment workflow with notification:
+
+```yaml
+name: Deploy and Notify
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Deploy Application
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 5
+
+      - name: Deploy to production
+        run: |
+          # Your deployment steps here
+          echo "Deploying application..."
+
+      - name: Capture recent commits
+        run: git log --oneline -5 > commit_message.txt
+
+      - name: Send Deployment Notification
+        uses: marcus-hooper/deployment-notification-o365@v1
+        env:
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_ENVIRONMENT: ${{ github.environment }}
+          NOTIFICATION_TO: ${{ vars.NOTIFICATION_TO }}
+          NOTIFICATION_FROM: ${{ vars.NOTIFICATION_FROM }}
 ```
 
 ### Sample Email Output
@@ -135,6 +176,13 @@ Add the following secrets to your repository (Settings > Secrets and variables >
 |-------|-------------|
 | `commit_message.txt` | File containing recent commit messages to include |
 
+## Limitations
+
+- **Plain text emails only** - HTML formatting is not supported
+- **US/Eastern timezone** - Timestamps use US/Eastern timezone; not configurable
+- **No retry logic** - Email send is attempted once; fails immediately on error
+- **Environment variables only** - Uses `env:` rather than `with:` inputs
+
 ## Troubleshooting
 
 ### Common Errors
@@ -185,6 +233,7 @@ deployment-notification-o365/
 │   ├── ISSUE_TEMPLATE/
 │   └── workflows/
 │       ├── ci.yml              # Linting, type checking, tests
+│       ├── codeql.yml          # CodeQL SAST analysis
 │       ├── security.yml        # Security scanning
 │       ├── validate.yml        # action.yml validation
 │       ├── release.yml         # Version tag management
