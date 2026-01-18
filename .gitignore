@@ -56,6 +56,10 @@ dmypy.json
 # OS
 .DS_Store
 Thumbs.db
+Desktop.ini
+
+# Claude Code
+.claude/
 
 # Local config (not checked in)
 *.local.md

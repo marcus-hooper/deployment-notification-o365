@@ -3,7 +3,7 @@
 [![CI](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/ci.yml/badge.svg)](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/ci.yml)
 [![GitHub release](https://img.shields.io/github/v/release/marcus-hooper/deployment-notification-o365)](https://github.com/marcus-hooper/deployment-notification-o365/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![CodeQL](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/codeql.yml/badge.svg)](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/codeql.yml)
 [![Security](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/security.yml/badge.svg)](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/security.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/marcus-hooper/deployment-notification-o365/badge)](https://scorecard.dev/viewer/?uri=github.com/marcus-hooper/deployment-notification-o365)
@@ -17,6 +17,19 @@ A GitHub Action that sends deployment notifications via email using Microsoft Gr
 - Uses Azure Active Directory for secure authentication
 - Includes repository, environment, timestamp, and recent commit messages
 - Cross-platform (runs on Linux, macOS, and Windows runners)
+
+## Quick Start
+
+```yaml
+- name: Send Deployment Notification
+  uses: marcus-hooper/deployment-notification-o365@v1
+  env:
+    AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+    AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+    AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+    NOTIFICATION_TO: team@example.com
+    NOTIFICATION_FROM: notifications@example.com
+```
 
 ## Usage
 
@@ -176,6 +189,14 @@ Add the following secrets to your repository (Settings > Secrets and variables >
 |-------|-------------|
 | `commit_message.txt` | File containing recent commit messages to include |
 
+## How It Works
+
+1. Loads Azure credentials from environment variables
+2. Reads `commit_message.txt` if present in the working directory
+3. Formats email with repository, environment, timestamp, and commits
+4. Authenticates via Azure AD using client credentials flow
+5. Sends email via Microsoft Graph API (`/users/{sender}/sendMail`)
+
 ## Limitations
 
 - **Plain text emails only** - HTML formatting is not supported
@@ -248,20 +269,26 @@ deployment-notification-o365/
 
 ## Contributing
 
-Contributions are welcome! Please:
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+
+Quick start:
 
 1. Check existing [issues](https://github.com/marcus-hooper/deployment-notification-o365/issues) or open a new one
 2. Fork the repository
 3. Create a feature branch (`git checkout -b feature/my-feature`)
 4. Make your changes and add tests if applicable
-5. Ensure CI passes (`ruff check .`, `pytest`)
+5. Ensure CI passes (lint, format, and test)
 6. Submit a pull request
 
-See the issue templates for [bug reports](.github/ISSUE_TEMPLATE/bug_report.md) and [feature requests](.github/ISSUE_TEMPLATE/feature_request.md).
+See the issue templates for [bug reports](.github/ISSUE_TEMPLATE/bug_report.yml) and [feature requests](.github/ISSUE_TEMPLATE/feature_request.yml).
 
 ## Security
 
 See [SECURITY.md](SECURITY.md) for security policy and best practices.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for version history.
 
 ## License
 

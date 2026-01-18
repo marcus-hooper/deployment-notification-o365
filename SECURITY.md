@@ -35,6 +35,7 @@ The following are considered security vulnerabilities:
 - Credential exposure or leakage
 - Injection vulnerabilities in the script
 - Issues that could compromise email content or recipients
+- Issues that could compromise the CI/CD pipeline
 
 Out of scope:
 - Vulnerabilities in upstream dependencies (report to the respective project)
@@ -62,6 +63,17 @@ This action handles sensitive credentials:
 3. **Rotate credentials regularly** - Update Azure AD client secrets periodically
 4. **Limit permissions** - Grant the Azure AD application only the minimum required permissions (Mail.Send)
 5. **Review access logs** - Monitor Azure AD sign-in logs for unusual activity
+6. **Pin to a specific version** - Use a tagged release (e.g., `@v1`) rather than `@main`
+7. **Use isolated runners** - Consider ephemeral runners for sensitive pipelines
+
+### Data Handling
+
+This action:
+
+- Does **not** log or expose Azure credentials or email addresses
+- Does **not** store any data beyond the workflow execution
+- Does **not** send data to any service other than Microsoft Graph API
+- Processes commit messages from local files (ensure you trust the source)
 
 ### Permissions Required
 

@@ -3,20 +3,32 @@ name: Security
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/*.md'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.github/*.md'
   schedule:
     # Run weekly on Wednesday at 6:00 UTC
     - cron: "0 6 * * 3"
 
-permissions:
-  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}
 
 jobs:
   # Scan dependencies for known vulnerabilities on PRs
   dependency-review:
     name: Dependency Review
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event_name == 'pull_request'
 
     permissions:
@@ -24,57 +36,65 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
-
-      - name: Dependency Review
-        uses: actions/dependency-review-action@3c4e3dcb1aa7874d2c16be7d79418e9b7efd6261
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
         with:
-          fail-on-severity: high
-          comment-summary-in-pr: always
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            github.com:443
 
-  # OSSF Scorecard for repository security best practices
-  scorecard:
-    name: OSSF Scorecard
-    runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
-
-    permissions:
-      contents: read
-      security-events: write
-      id-token: write
-
-    steps:
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
         with:
           persist-credentials: false
 
-      - name: Run Scorecard
-        uses: ossf/scorecard-action@4eaacf0543bb3f2c246792bd56e8cdeffafb205a
+      - name: Dependency Review
+        uses: actions/dependency-review-action@3c4e3dcb1aa7874d2c16be7d79418e9b7efd6261 # v4.7.1
         with:
-          results_file: results.sarif
-          results_format: sarif
-          publish_results: true
-
-      - name: Upload Scorecard results
-        uses: github/codeql-action/upload-sarif@7434149006143a4d75b82a2f411ef15b03ccc2d7
-        with:
-          sarif_file: results.sarif
+          config-file: .github/dependency-review-config.yml
+          fail-on-severity: high
+          comment-summary-in-pr: always
 
   # Static analysis for Python
   script-security:
     name: Script Security Check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
+      security-events: write
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            files.pythonhosted.org:443
+            github.com:443
+            pypi.org:443
+            uploads.github.com:443
+
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v5.5.0
         with:
           python-version: "3.13"
+
+      - name: Cache pip
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements-dev.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: pip install --require-hashes -r requirements-dev.txt
@@ -82,16 +102,23 @@ jobs:
       - name: Run Bandit security scanner
         run: |
           echo "Running Bandit security scanner..."
-          bandit -r . -x ./tests,./.venv -f json -o bandit-report.json || true
+          bandit -r . -x ./tests,./.venv -f sarif -o bandit-results.sarif || true
           bandit -r . -x ./tests,./.venv -ll
           echo "Security scan complete"
 
-      - name: Upload Bandit report
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+      - name: Upload Bandit SARIF to Security tab
+        uses: github/codeql-action/upload-sarif@7434149006143a4d75b82a2f411ef15b03ccc2d7 # v4
+        if: always()
+        with:
+          sarif_file: bandit-results.sarif
+          category: bandit
+
+      - name: Upload Bandit report artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         if: always()
         with:
           name: bandit-security-report
-          path: bandit-report.json
+          path: bandit-results.sarif
           if-no-files-found: ignore
 
       - name: Check for hardcoded secrets
@@ -154,15 +181,40 @@ jobs:
   pip-audit:
     name: Pip Audit
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    permissions:
+      contents: read
 
     steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            api.osv.dev:443
+            files.pythonhosted.org:443
+            github.com:443
+            pypi.org:443
+
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548
+        uses: actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v5.5.0
         with:
           python-version: "3.13"
+
+      - name: Cache pip
+        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements-dev.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: pip install --require-hashes -r requirements-dev.txt

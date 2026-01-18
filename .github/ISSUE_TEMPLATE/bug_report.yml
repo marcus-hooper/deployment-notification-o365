@@ -1,0 +1,112 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["type:bug", "priority:medium"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the form below.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear description of the bug.
+      placeholder: What happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior.
+      placeholder: |
+        1. Configure workflow with...
+        2. Trigger deployment...
+        3. See error...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What you expected to happen.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened.
+    validations:
+      required: true
+
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow Configuration
+      description: Paste your workflow YAML here (redact secrets).
+      render: yaml
+
+  - type: dropdown
+    id: runner-os
+    attributes:
+      label: Runner OS
+      options:
+        - ubuntu-latest
+        - ubuntu-24.04
+        - ubuntu-22.04
+        - windows-latest
+        - windows-2022
+        - macos-latest
+        - macos-14
+        - Other (specify in additional context)
+    validations:
+      required: true
+
+  - type: input
+    id: action-version
+    attributes:
+      label: Action Version
+      description: Which version of the action are you using?
+      placeholder: "@v1, @main, or specific SHA"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: azure-ad
+    attributes:
+      label: Azure AD Mail.Send Permission Configured?
+      options:
+        - "Yes"
+        - "No"
+        - "Unsure"
+    validations:
+      required: false
+
+  - type: input
+    id: python-version
+    attributes:
+      label: Python Version
+      description: The Python version shown in the workflow logs
+      placeholder: "3.13"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Paste relevant logs here (redact sensitive info).
+      placeholder: Expand the step and copy relevant output
+      render: shell
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other relevant information.
