@@ -1,6 +1,6 @@
 # GitHub Labels Configuration
-# Apply with: npx github-label-sync --labels .github/labels.yml owner/repo
-# Or use GitHub CLI: gh label create "name" --description "desc" --color "color"
+# Synced automatically by .github/workflows/labels.yml using EndBug/label-sync
+# Manual: gh label create "name" --description "desc" --color "color"
 
 # Issue Types
 - name: "type:bug"
@@ -71,11 +71,11 @@
 
 - name: "status:in-progress"
   description: "Currently being worked on"
-  color: "0E8A16"
+  color: "1D76DB"
 
 - name: "status:ready-for-review"
   description: "Ready for code review"
-  color: "0E8A16"
+  color: "6F42C1"
 
 # Areas
 - name: "area:python"

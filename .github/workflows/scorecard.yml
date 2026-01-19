@@ -20,8 +20,9 @@ permissions: {}
 
 jobs:
   # Job 1: Run Scorecard and publish to OpenSSF (requires uses-only steps)
+  # Note: Scorecard only runs on the main repository, not forks (forks lack required permissions)
   analysis:
-    if: github.repository == 'marcus-hooper/deployment-notification-o365'
+    if: github.repository_owner == github.event.repository.owner.login && !github.event.repository.fork
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
@@ -51,7 +52,7 @@ jobs:
             www.bestpractices.dev:443
 
       - name: Checkout
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -99,7 +100,7 @@ jobs:
         run: |
           set -euo pipefail
           # Add a summary note to the first SARIF run's invocations to describe what Scorecard evaluated.
-          jq '.runs[0].invocations = [{"executionSuccessful": true, "toolExecutionNotifications": [{"level": "note", "message": {"text": "Scorecard evaluated repository security posture across 18 checks including branch protection, dependency management, CI/CD security, and vulnerability disclosure."}, "descriptor": {"id": "scanned-files-summary"}}]}]' \
+          jq '.runs[0].invocations = (.runs[0].invocations // []) + [{"executionSuccessful": true, "toolExecutionNotifications": [{"level": "note", "message": {"text": "Scorecard evaluated repository security posture across 18 checks including branch protection, dependency management, CI/CD security, and vulnerability disclosure."}, "descriptor": {"id": "scanned-files-summary"}}]}]' \
             results.sarif > results.tmp
           mv results.tmp results.sarif
 

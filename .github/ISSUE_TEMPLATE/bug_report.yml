@@ -8,6 +8,10 @@ body:
       value: |
         Thanks for taking the time to report a bug! Please fill out the form below.
 
+        **Before submitting**, please review the [README](https://github.com/marcus-hooper/deployment-notification-o365#readme) for usage guidance.
+
+        **Tip**: Enable debug logging by setting `ACTIONS_STEP_DEBUG: true` in your repository secrets for more detailed output.
+
   - type: textarea
     id: description
     attributes:
@@ -73,6 +77,7 @@ body:
         - ubuntu-24.04
         - ubuntu-22.04
         - ubuntu-slim
+        - ubuntu-24.04-slim
         - ubuntu-24.04-arm
         - ubuntu-22.04-arm
         - windows-latest
@@ -118,12 +123,15 @@ body:
     validations:
       required: false
 
-  - type: input
+  - type: textarea
     id: error-message
     attributes:
       label: Error Message
-      description: The exact error message (if any)
-      placeholder: "CredentialUnavailableError: ..."
+      description: The exact error message (if any), including stack traces
+      render: shell
+      placeholder: |
+        CredentialUnavailableError: ClientSecretCredential authentication failed
+        File "send_deployment_notification.py", line 45, in initialize_graph_client
 
   - type: textarea
     id: logs

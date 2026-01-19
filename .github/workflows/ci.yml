@@ -5,10 +5,8 @@ on:
   push:
     branches: [main]
     paths-ignore: &paths-ignore
-      - 'README.md'
-      - 'SECURITY.md'
+      - '**.md'
       - 'docs/**'
-      - '.github/*.md'
       - '.github/ISSUE_TEMPLATE/**'
       - 'LICENSE'
   pull_request:
@@ -38,7 +36,7 @@ jobs:
             github.com:443
 
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -72,7 +70,7 @@ jobs:
             pypi.org:443
 
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -113,7 +111,7 @@ jobs:
             pypi.org:443
 
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -136,6 +134,9 @@ jobs:
     name: Run Tests
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    permissions:
+      contents: read
+      checks: write
 
     steps:
       - name: Harden Runner
@@ -154,7 +155,7 @@ jobs:
             uploader.codecov.io:443
 
       - name: Checkout repository
-        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
 
@@ -182,19 +183,76 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Publish test results
+        uses: dorny/test-reporter@b082adf0eced0765477756c2a610396589b8c637 # v2.5.0
+        if: always()
+        with:
+          name: Pytest Tests
+          path: test-results.xml
+          reporter: java-junit
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+        if: always()
         with:
           files: coverage.xml
           fail_ci_if_error: false
+          verbose: true
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  integration-test:
+    name: Integration Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@20cf305ff2072d973412fa9b1e3a4f227bda3c76 # v2.14.0
+        with:
+          egress-policy: block
+          allowed-endpoints: >
+            api.github.com:443
+            github.com:443
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Validate action.yml syntax
+        run: |
+          echo "Validating action.yml..."
+          if [[ ! -f action.yml ]]; then
+            echo "::error::action.yml not found"
+            exit 1
+          fi
+          if ! yq eval '.' action.yml > /dev/null 2>&1; then
+            echo "::error::action.yml is not valid YAML"
+            exit 1
+          fi
+          echo "action.yml is valid YAML"
+
+      - name: Validate action.yml structure
+        run: |
+          # Check for required composite action fields
+          if ! yq eval '.name' action.yml > /dev/null 2>&1 || \
+             [[ "$(yq eval '.name' action.yml)" == "null" ]]; then
+            echo "::error::action.yml missing 'name' field"
+            exit 1
+          fi
+          if ! yq eval '.runs.using' action.yml > /dev/null 2>&1 || \
+             [[ "$(yq eval '.runs.using' action.yml)" != "composite" ]]; then
+            echo "::error::action.yml missing 'runs.using: composite'"
+            exit 1
+          fi
+          echo "action.yml structure valid"
 
   ci-status:
     name: CI Status
     runs-on: ubuntu-latest
     if: always()
-    needs: [validate-changelog, lint, type-check, test]
+    needs: [validate-changelog, lint, type-check, test, integration-test]
 
     steps:
       - name: Check CI status
@@ -202,7 +260,8 @@ jobs:
           if [[ "${{ needs.validate-changelog.result }}" != "success" ]] || \
              [[ "${{ needs.lint.result }}" != "success" ]] || \
              [[ "${{ needs.type-check.result }}" != "success" ]] || \
-             [[ "${{ needs.test.result }}" != "success" ]]; then
+             [[ "${{ needs.test.result }}" != "success" ]] || \
+             [[ "${{ needs.integration-test.result }}" != "success" ]]; then
             echo "::error::One or more CI jobs failed"
             exit 1
           fi

@@ -43,7 +43,9 @@ jobs:
         run: |
           echo "Auto-merging ${UPDATE_TYPE} update"
           echo "Package: ${DEPENDENCY_NAMES}"
-          gh pr merge --auto --squash "$PR_URL" || echo "Auto-merge request failed or already pending"
+          if ! gh pr merge --auto --squash "$PR_URL" 2>&1; then
+            echo "::warning::Auto-merge request failed - PR may already have auto-merge enabled or branch protection rules may not be met"
+          fi
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -51,67 +53,89 @@ jobs:
           DEPENDENCY_NAMES: ${{ steps.metadata.outputs.dependency-names }}
 
       - name: Skip auto-merge for GitHub Actions updates
-        if: steps.metadata.outputs.package-ecosystem == 'github_actions'
+        if: |
+          steps.metadata.outputs.package-ecosystem == 'github_actions' &&
+          steps.metadata.outputs.update-type != 'version-update:semver-major'
         run: |
           echo "GitHub Actions updates require manual merge (GITHUB_TOKEN cannot modify workflow files)"
 
           # Check if we already commented on this PR
           EXISTING_COMMENT=$(gh pr view "$PR_URL" --json comments --jq '.comments[].body' | grep -c "GitHub Actions update requires manual merge" || true)
           if [ "$EXISTING_COMMENT" -eq "0" ]; then
-            gh pr comment "$PR_URL" --body "$(cat <<EOF
-          **GitHub Actions update requires manual merge**
-
-          This PR updates a GitHub Actions workflow dependency (**${DEPENDENCY_NAMES}**).
-
-          Due to GitHub security restrictions, the \`GITHUB_TOKEN\` cannot modify workflow files, so this PR cannot be auto-merged.
-
-          **Action required:** Please review and merge this PR manually.
-          EOF
-          )"
+            gh pr comment "$PR_URL" --body "$COMMENT_BODY"
           else
             echo "Comment already exists, skipping"
           fi
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEPENDENCY_NAMES: ${{ steps.metadata.outputs.dependency-names }}
+          COMMENT_BODY: |
+            **GitHub Actions update requires manual merge**
 
-      - name: Add label for major updates
+            This PR updates a GitHub Actions workflow dependency.
+
+            Due to GitHub security restrictions, the `GITHUB_TOKEN` cannot modify workflow files, so this PR cannot be auto-merged.
+
+            **Action required:** Please review and merge this PR manually.
+
+      - name: Handle major updates
         if: |
           steps.metadata.outputs.update-type == 'version-update:semver-major' &&
           steps.metadata.outputs.package-ecosystem != 'github_actions'
         run: |
           echo "Major update detected - requires manual review"
-          gh pr edit "$PR_URL" --add-label "major-update,needs-review"
-        env:
-          PR_URL: ${{ github.event.pull_request.html_url }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          gh pr edit "$PR_URL" --add-label "major-update" --add-label "needs-review"
 
-      - name: Comment on major updates
-        if: |
-          steps.metadata.outputs.update-type == 'version-update:semver-major' &&
-          steps.metadata.outputs.package-ecosystem != 'github_actions'
-        run: |
           # Check if we already commented on this PR
           EXISTING_COMMENT=$(gh pr view "$PR_URL" --json comments --jq '.comments[].body' | grep -c "Major version update detected" || true)
           if [ "$EXISTING_COMMENT" -eq "0" ]; then
-            gh pr comment "$PR_URL" --body "$(cat <<EOF
-          **Major version update detected**
-
-          This PR updates **${DEPENDENCY_NAMES}** to a new major version.
-
-          **Action required:**
-          1. Review the changelog for breaking changes
-          2. Test thoroughly before merging
-          3. Merge manually when ready
-
-          Major updates are not auto-merged for safety.
-          EOF
-          )"
+            gh pr comment "$PR_URL" --body "$COMMENT_BODY"
           else
             echo "Comment already exists, skipping"
           fi
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          DEPENDENCY_NAMES: ${{ steps.metadata.outputs.dependency-names }}
+          COMMENT_BODY: |
+            **Major version update detected**
+
+            This PR updates a dependency to a new major version.
+
+            **Action required:**
+            1. Review the changelog for breaking changes
+            2. Test thoroughly before merging
+            3. Merge manually when ready
+
+            Major updates are not auto-merged for safety.
+
+      - name: Handle GitHub Actions major updates
+        if: |
+          steps.metadata.outputs.update-type == 'version-update:semver-major' &&
+          steps.metadata.outputs.package-ecosystem == 'github_actions'
+        run: |
+          echo "GitHub Actions major update detected - requires manual review and merge"
+          gh pr edit "$PR_URL" --add-label "major-update" --add-label "needs-review"
+
+          # Check if we already commented on this PR
+          EXISTING_COMMENT=$(gh pr view "$PR_URL" --json comments --jq '.comments[].body' | grep -c "GitHub Actions major version update" || true)
+          if [ "$EXISTING_COMMENT" -eq "0" ]; then
+            gh pr comment "$PR_URL" --body "$COMMENT_BODY"
+          else
+            echo "Comment already exists, skipping"
+          fi
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMENT_BODY: |
+            **GitHub Actions major version update**
+
+            This PR updates a GitHub Actions dependency to a new major version.
+
+            **Action required:**
+            1. Review the changelog for breaking changes
+            2. Test thoroughly before merging
+            3. Merge manually when ready
+
+            > **Note:** Due to GitHub security restrictions, the `GITHUB_TOKEN` cannot modify workflow files, so this PR cannot be auto-merged regardless of version type.
+
+            Major updates are not auto-merged for safety.

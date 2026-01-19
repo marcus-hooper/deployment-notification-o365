@@ -8,7 +8,7 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Etc/UTC"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     rebase-strategy: "auto"
     groups:
       # Production dependencies - higher risk, review carefully
@@ -17,6 +17,9 @@ updates:
           - "azure-identity"
           - "msgraph-sdk"
           - "pytz"
+        update-types:
+          - "minor"
+          - "patch"
       # Development dependencies - lower risk
       dev-deps:
         patterns:
@@ -27,6 +30,9 @@ updates:
           - "bandit"
           - "pip-audit"
           - "coverage"
+        update-types:
+          - "minor"
+          - "patch"
     labels:
       - "dependencies"
       - "deps:python"
@@ -42,12 +48,20 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Etc/UTC"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     rebase-strategy: "auto"
     groups:
-      github-actions:
+      # Security-related actions - prioritize these
+      security-actions:
         patterns:
-          - "*"
+          - "ossf/*"
+          - "github/codeql-action"
+          - "step-security/*"
+      # CI/CD actions
+      ci-actions:
+        patterns:
+          - "actions/*"
+          - "github/dependency-review-action"
     labels:
       - "dependencies"
       - "github-actions"
