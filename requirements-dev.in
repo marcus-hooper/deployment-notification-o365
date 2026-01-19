@@ -17,3 +17,7 @@ types-pytz>=2024.1.0
 # Security scanning
 bandit[sarif]>=1.7.0
 pip-audit>=2.7.0
+
+# Transitive dependencies (pinned to prevent Dependabot from removing them)
+# setuptools is required by pbr, which is required by stevedore, which is required by bandit
+setuptools>=80.0.0

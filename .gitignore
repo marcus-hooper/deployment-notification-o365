@@ -73,6 +73,7 @@ commit_message.txt
 
 # Security/test reports
 bandit-report.json
+bandit-results.sarif
 test-results.xml
 
 # pyenv
