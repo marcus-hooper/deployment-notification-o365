@@ -37,7 +37,7 @@ updates:
       - "dependencies"
       - "deps:python"
     commit-message:
-      prefix: "deps"
+      prefix: "chore(deps)"
       include: "scope"
 
   # GitHub Actions
@@ -66,5 +66,5 @@ updates:
       - "dependencies"
       - "github-actions"
     commit-message:
-      prefix: "ci"
+      prefix: "chore(ci)"
       include: "scope"
