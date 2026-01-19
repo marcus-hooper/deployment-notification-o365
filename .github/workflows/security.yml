@@ -122,7 +122,7 @@ jobs:
           python-version: "3.13"
 
       - name: Cache pip
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements-dev.txt') }}
@@ -139,7 +139,7 @@ jobs:
           echo "Security scan complete"
 
       - name: Upload Bandit SARIF to Security tab
-        uses: github/codeql-action/upload-sarif@7434149006143a4d75b82a2f411ef15b03ccc2d7 # v4
+        uses: github/codeql-action/upload-sarif@fb650c22f965a3eff7e20c5535e51a256dd16bf1 # v4
         if: always()
         with:
           sarif_file: bandit-results.sarif
@@ -186,7 +186,7 @@ jobs:
           python-version: "3.13"
 
       - name: Cache pip
-        uses: actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
+        uses: actions/cache@8b402f58fbc84540c8b491a91e594a4576fec3d7 # v5.0.2
         with:
           path: ~/.cache/pip
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements-dev.txt') }}
