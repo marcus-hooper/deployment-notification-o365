@@ -15,5 +15,5 @@ mypy>=1.10.0
 types-pytz>=2024.1.0
 
 # Security scanning
-bandit>=1.7.0
+bandit[sarif]>=1.7.0
 pip-audit>=2.7.0

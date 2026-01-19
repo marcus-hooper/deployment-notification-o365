@@ -30,8 +30,6 @@ updates:
     labels:
       - "dependencies"
       - "deps:python"
-    reviewers:
-      - "marcus-hooper"
     commit-message:
       prefix: "deps"
       include: "scope"
@@ -53,8 +51,6 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
-    reviewers:
-      - "marcus-hooper"
     commit-message:
       prefix: "ci"
       include: "scope"

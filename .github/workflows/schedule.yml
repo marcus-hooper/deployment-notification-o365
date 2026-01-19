@@ -116,22 +116,14 @@ jobs:
           else
             echo "Creating new failure issue"
             RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-            ISSUE_BODY=$(cat <<'EOF'
-The scheduled health check workflow failed.
-
-## Details
-- **Run URL:** $RUN_URL
-
-## Possible Causes
-- Python dependency installation failure
-- Import resolution errors (msgraph-sdk, azure-identity)
-- Linting or pytest failures
-
-Please investigate and resolve the issue.
-EOF
-)
-            # Substitute variables into the issue body
-            ISSUE_BODY="${ISSUE_BODY//\$RUN_URL/$RUN_URL}"
+            ISSUE_BODY="The scheduled health check workflow failed."
+            ISSUE_BODY="$ISSUE_BODY"$'\n\n'"## Details"
+            ISSUE_BODY="$ISSUE_BODY"$'\n'"- **Run URL:** $RUN_URL"
+            ISSUE_BODY="$ISSUE_BODY"$'\n\n'"## Possible Causes"
+            ISSUE_BODY="$ISSUE_BODY"$'\n'"- Python dependency installation failure"
+            ISSUE_BODY="$ISSUE_BODY"$'\n'"- Import resolution errors (msgraph-sdk, azure-identity)"
+            ISSUE_BODY="$ISSUE_BODY"$'\n'"- Linting or pytest failures"
+            ISSUE_BODY="$ISSUE_BODY"$'\n\n'"Please investigate and resolve the issue."
             gh issue create \
               --title "Scheduled health check failed" \
               --label "health-check-failure,type:bug" \
