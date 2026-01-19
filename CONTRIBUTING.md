@@ -8,12 +8,43 @@ Thank you for your interest in contributing to deployment-notification-o365!
 
 - Python 3.13+
 - Git
+- GitHub CLI (`gh`) - recommended for releases
+
+> **Windows Users**: The `msgraph-sdk` package has path length issues on Windows during installation. Tests mock the SDK entirely, so you can still run the test suite. See [Test Mocking](#test-mocking) for details.
 
 ### Clone and Install
+
+**For external contributors** (fork first):
+
+```bash
+# Fork the repo on GitHub, then:
+git clone https://github.com/YOUR-USERNAME/deployment-notification-o365.git
+cd deployment-notification-o365
+git remote add upstream https://github.com/marcus-hooper/deployment-notification-o365.git
+```
+
+**For maintainers** (direct access):
 
 ```bash
 git clone https://github.com/marcus-hooper/deployment-notification-o365.git
 cd deployment-notification-o365
+```
+
+**Set up virtual environment** (recommended):
+
+```bash
+python -m venv venv
+
+# On macOS/Linux:
+source venv/bin/activate
+
+# On Windows:
+venv\Scripts\activate
+```
+
+**Install dependencies**:
+
+```bash
 pip install -r requirements-dev.txt
 ```
 
@@ -44,9 +75,11 @@ pytest
 ### Quick CI Script
 
 ```bash
-# All-in-one CI check
+# All-in-one CI check (stops on first failure)
 ruff check . && ruff format --check . && mypy send_deployment_notification.py --ignore-missing-imports && pytest
 ```
+
+> **Tip**: The `&&` chaining stops at the first failure. To see all failures at once, run each command separately.
 
 ## Commit Messages
 
@@ -72,6 +105,8 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 | `ci` | CI/workflow changes |
 | `deps` | Dependency updates |
 | `security` | Security improvements |
+| `chore` | Other maintenance tasks |
+| `perf` | Performance improvement |
 
 ### Examples
 
@@ -111,18 +146,33 @@ BREAKING CHANGE: Email bodies now use HTML content type instead of plain text.
 
 1. **Create a branch** from `main`:
    ```bash
-   git checkout -b feature/your-feature-name
+   git checkout -b <type>/short-description
    ```
+
+   Use branch prefixes that match your commit type:
+
+   | Branch Prefix | Use For |
+   |---------------|---------|
+   | `feature/` | New features |
+   | `fix/` | Bug fixes |
+   | `docs/` | Documentation changes |
+   | `refactor/` | Code refactoring |
+   | `security/` | Security improvements |
+   | `ci/` | CI/workflow changes |
 
 2. **Run CI locally** (see above)
 
 3. **Add tests** for new functionality
 
-4. **Update README.md** if adding new environment variables or changing behavior
+4. **Update CHANGELOG.md** under `[Unreleased]`
+
+5. **Update README.md** if adding new environment variables or changing behavior
 
 ### PR Requirements
 
 All PRs must pass these checks before merge:
+
+**Core CI Checks** (ci.yml):
 
 | Check | Command | Threshold |
 |-------|---------|-----------|
@@ -130,11 +180,21 @@ All PRs must pass these checks before merge:
 | Format | `ruff format --check .` | No changes |
 | Type Check | `mypy send_deployment_notification.py --ignore-missing-imports` | No errors |
 | Tests | `pytest` | All pass |
-| Security | `bandit -r . -x ./tests` | No high-severity issues |
+| Coverage | `pytest --cov=.` | Informational only |
+
+**Security Checks** (run automatically):
+
+| Check | Workflow | Purpose |
+|-------|----------|---------|
+| Bandit | security.yml | Python security linter |
+| pip-audit | security.yml | Dependency vulnerability scan |
+| CodeQL | codeql.yml | Static application security testing |
+| Dependency Review | On PR | Flags vulnerable dependencies |
+| OSSF Scorecard | scorecard.yml | Supply chain security analysis |
 
 ### PR Description
 
-Include in your PR description:
+Use the [PR template](.github/PULL_REQUEST_TEMPLATE.md). Include:
 
 - Summary of changes
 - Related issue (if any)
@@ -222,18 +282,22 @@ Use the feature request template. Include:
 
 Releases are managed by maintainers:
 
-1. All CI checks pass on `main`
-2. Tag created: `git tag -a v1.0.0 -m "Release v1.0.0"`
-3. Tag pushed: `git push origin v1.0.0`
-4. GitHub Actions updates the major version tag (`v1` → points to `v1.0.0`)
+1. Ensure all CI checks pass on `main`
+2. Create a GitHub Release using the CLI:
+   ```bash
+   gh release create v1.0.0 --title "v1.0.0" --notes "Release notes here"
+   ```
+   Or use the GitHub web UI to create a release with a new tag.
+3. The `release.yml` workflow automatically updates the major version tag (`v1` → points to `v1.0.0`)
 
 Users referencing `@v1` automatically get the latest `v1.x.x` release.
 
 ## Getting Help
 
-- **Questions**: Open a [Discussion](https://github.com/marcus-hooper/deployment-notification-o365/discussions)
-- **Bugs**: Open an [Issue](https://github.com/marcus-hooper/deployment-notification-o365/issues)
-- **Security**: See [SECURITY.md](SECURITY.md)
+- **Questions**: Open an [Issue](../../issues) with the `question` label
+- **Bugs**: Open an [Issue](../../issues) using the bug report template
+- **Features**: Open an [Issue](../../issues) using the feature request template
+- **Security vulnerabilities**: See [SECURITY.md](SECURITY.md) for responsible disclosure
 
 ## License
 

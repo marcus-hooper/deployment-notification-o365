@@ -1,3 +1,8 @@
+# CodeQL Security Analysis
+#
+# Scope: Analyzes Python code and GitHub Actions workflow files (YAML).
+# Runs on push/PR to main and weekly schedule.
+
 name: CodeQL
 
 on:
@@ -17,7 +22,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
 
 permissions: {}
 
@@ -41,6 +46,7 @@ jobs:
             api.github.com:443
             github.com:443
             objects.githubusercontent.com:443
+            release-assets.githubusercontent.com:443
             uploads.github.com:443
 
       - name: Checkout
@@ -52,6 +58,7 @@ jobs:
         uses: github/codeql-action/init@7434149006143a4d75b82a2f411ef15b03ccc2d7 # v4
         with:
           languages: python, actions
+          queries: security-and-quality
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@7434149006143a4d75b82a2f411ef15b03ccc2d7 # v4

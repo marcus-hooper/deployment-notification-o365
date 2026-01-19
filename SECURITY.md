@@ -25,8 +25,20 @@ If you discover a security vulnerability in this project, please report it respo
 - Acknowledgment of your report within 48 hours
 - Initial assessment within 7 days
 - Target resolution within 90 days for critical vulnerabilities
-- Regular updates on the progress of addressing the vulnerability
+- Weekly updates on the progress of addressing the vulnerability
 - Credit in the security advisory (unless you prefer to remain anonymous)
+
+### Safe Harbor
+
+We consider security research conducted in accordance with this policy to be:
+
+- Authorized concerning any applicable anti-hacking laws
+- Authorized concerning any relevant anti-circumvention laws
+- Exempt from restrictions in our Terms of Service that would interfere with conducting security research
+
+We will not pursue civil action or initiate a complaint to law enforcement for accidental, good-faith violations of this policy. We consider security research conducted consistent with this policy to be "authorized" conduct under the Computer Fraud and Abuse Act.
+
+We understand that many systems and services interconnect with third-party systems. While researching this project, ensure you do not access or modify third-party systems without authorization.
 
 ### Scope
 
@@ -38,7 +50,7 @@ The following are considered security vulnerabilities:
 - Issues that could compromise the CI/CD pipeline
 
 Out of scope:
-- Vulnerabilities in upstream dependencies (report to the respective project)
+- Vulnerabilities in upstream dependencies (report to the respective project). However, if you notice we're using a vulnerable version, please let us know and we'll update our pinned dependencies promptly.
 - Issues requiring physical access or social engineering
 
 ### Security Notifications
@@ -49,12 +61,38 @@ Security fixes are announced via:
 
 Dependencies are monitored automatically via Dependabot.
 
+## Security Infrastructure
+
+This project employs multiple layers of automated security:
+
+| Measure | Description |
+|---------|-------------|
+| **CodeQL** | Static analysis for security vulnerabilities |
+| **OSSF Scorecard** | Supply chain security assessment published to OpenSSF |
+| **Bandit** | Python-specific security linter |
+| **pip-audit** | Scans for known vulnerabilities in Python dependencies |
+| **Secret Scanning** | Detects hardcoded credentials in code |
+| **Pinned Actions** | All GitHub Actions pinned to full commit SHAs |
+| **Dependabot** | Automated dependency updates |
+| **Least Privilege Workflows** | Workflows use minimal `contents: read` permissions by default |
+
 ## Security Considerations
 
-This action handles sensitive credentials:
+This action performs the following operations:
 
-- **Azure AD credentials** (tenant ID, client ID, client secret)
-- **Email addresses** (sender and recipients)
+1. **Authenticates to Azure AD** using client credentials (tenant ID, client ID, secret)
+2. **Sends HTTP requests** to Microsoft Graph API to send emails
+3. **Reads local files** (commit_message.txt) if present
+4. **Handles sensitive data** including Azure AD credentials and email addresses
+
+### Network Endpoints
+
+If you have firewall or egress restrictions, allow these endpoints:
+
+| Endpoint | Port | Purpose |
+|----------|------|---------|
+| `login.microsoftonline.com` | 443 | Azure AD authentication |
+| `graph.microsoft.com` | 443 | Microsoft Graph API (email sending) |
 
 ### Best Practices for Users
 
@@ -74,6 +112,7 @@ This action:
 - Does **not** store any data beyond the workflow execution
 - Does **not** send data to any service other than Microsoft Graph API
 - Processes commit messages from local files (ensure you trust the source)
+- Credentials passed via GitHub Secrets are automatically masked in workflow logs by GitHub Actions
 
 ### Permissions Required
 

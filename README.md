@@ -8,13 +8,13 @@
 [![Security](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/security.yml/badge.svg)](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/security.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/marcus-hooper/deployment-notification-o365/badge)](https://scorecard.dev/viewer/?uri=github.com/marcus-hooper/deployment-notification-o365)
 
-A GitHub Action that sends deployment notifications via email using Microsoft Graph API and Azure Active Directory.
+A GitHub Action that sends deployment notifications via email using Microsoft Graph API and Microsoft Entra ID (formerly Azure Active Directory).
 
 ## Features
 
 - Sends deployment notification emails when deployments complete
 - Integrates with Microsoft Graph API for email delivery
-- Uses Azure Active Directory for secure authentication
+- Uses Microsoft Entra ID for secure authentication
 - Includes repository, environment, timestamp, and recent commit messages
 - Cross-platform (runs on Linux, macOS, and Windows runners)
 
@@ -30,6 +30,14 @@ A GitHub Action that sends deployment notifications via email using Microsoft Gr
     NOTIFICATION_TO: team@example.com
     NOTIFICATION_FROM: notifications@example.com
 ```
+
+## Inputs
+
+This action uses environment variables instead of `with:` inputs. See [Environment Variables](#environment-variables) for configuration.
+
+## Outputs
+
+This action does not produce outputs.
 
 ## Usage
 
@@ -116,14 +124,14 @@ The action sends a plain text email with the following format:
 
 **Subject:**
 ```
-Deployment Successful: owner/repo to production on 2025-01-15 14:30:45
+Deployment Successful: owner/repo to production on 2026-01-15 14:30:45
 ```
 
 **Body:**
 ```
 Repository: owner/repo
 Environment: production
-Deployment Time: 2025-01-15 14:30:45
+Deployment Time: 2026-01-15 14:30:45
 Status: Successful
 Started by: username
 Repository URL: https://github.com/owner/repo
@@ -135,9 +143,9 @@ def5678 Add new feature
 
 ## Prerequisites
 
-### Azure Active Directory Application
+### Microsoft Entra ID Application
 
-1. **Register an application** in [Azure Portal](https://portal.azure.com) > Azure Active Directory > App registrations > New registration
+1. **Register an application** in [Azure Portal](https://portal.azure.com) > Microsoft Entra ID > App registrations > New registration
    - Name: `GitHub Deployment Notifications` (or your preference)
    - Supported account types: Single tenant
    - Redirect URI: Leave blank
@@ -170,23 +178,30 @@ Add the following secrets to your repository (Settings > Secrets and variables >
 
 ## Environment Variables
 
-### Required
+### Required (User-Provided)
 
 | Variable | Description |
 |----------|-------------|
-| `AZURE_TENANT_ID` | Azure AD Tenant ID |
-| `AZURE_CLIENT_ID` | Azure AD Application Client ID |
-| `AZURE_CLIENT_SECRET` | Azure AD Application Client Secret |
-| `GITHUB_REPOSITORY` | Repository name (owner/repo) |
-| `GITHUB_ACTOR` | User who triggered the deployment |
-| `GITHUB_ENVIRONMENT` | Deployment environment (e.g., production) |
+| `AZURE_TENANT_ID` | Microsoft Entra ID Tenant ID |
+| `AZURE_CLIENT_ID` | Microsoft Entra ID Application Client ID |
+| `AZURE_CLIENT_SECRET` | Microsoft Entra ID Application Client Secret |
 | `NOTIFICATION_TO` | Comma-separated recipient email addresses |
 | `NOTIFICATION_FROM` | Sender email address (must have a mailbox in your tenant) |
 
+### Provided by GitHub Actions
+
+These variables are automatically available in GitHub Actions workflows and do not need to be explicitly set:
+
+| Variable | Description |
+|----------|-------------|
+| `GITHUB_REPOSITORY` | Repository name (owner/repo) - automatically set |
+| `GITHUB_ACTOR` | User who triggered the deployment - automatically set |
+| `GITHUB_ENVIRONMENT` | Deployment environment - set when using `environment:` in job |
+
 ### Optional
 
-| Input | Description |
-|-------|-------------|
+| File | Description |
+|------|-------------|
 | `commit_message.txt` | File containing recent commit messages to include |
 
 ## How It Works
@@ -194,7 +209,7 @@ Add the following secrets to your repository (Settings > Secrets and variables >
 1. Loads Azure credentials from environment variables
 2. Reads `commit_message.txt` if present in the working directory
 3. Formats email with repository, environment, timestamp, and commits
-4. Authenticates via Azure AD using client credentials flow
+4. Authenticates via Microsoft Entra ID using client credentials flow
 5. Sends email via Microsoft Graph API (`/users/{sender}/sendMail`)
 
 ## Limitations
@@ -227,7 +242,7 @@ Add the following secrets to your repository (Settings > Secrets and variables >
 
 ### Requirements
 
-- Python 3.11+
+- Python 3.13+
 
 ### Setup
 
@@ -245,6 +260,22 @@ ruff check .
 mypy send_deployment_notification.py --ignore-missing-imports
 ```
 
+### Manual Testing
+
+For end-to-end testing with real credentials:
+
+```bash
+export AZURE_TENANT_ID='your-tenant-id'
+export AZURE_CLIENT_ID='your-client-id'
+export AZURE_CLIENT_SECRET='your-secret'
+export NOTIFICATION_TO='you@example.com'
+export NOTIFICATION_FROM='sender@example.com'
+export GITHUB_REPOSITORY='owner/repo'
+export GITHUB_ACTOR='username'
+export GITHUB_ENVIRONMENT='test'
+python send_deployment_notification.py
+```
+
 ### Project Structure
 
 ```
@@ -255,10 +286,13 @@ deployment-notification-o365/
 │   └── workflows/
 │       ├── ci.yml              # Linting, type checking, tests
 │       ├── codeql.yml          # CodeQL SAST analysis
-│       ├── security.yml        # Security scanning
-│       ├── validate.yml        # action.yml validation
+│       ├── dependabot-auto-merge.yml  # Auto-merge Dependabot PRs
+│       ├── labels.yml          # Repository label sync
 │       ├── release.yml         # Version tag management
-│       └── ...
+│       ├── schedule.yml        # Scheduled maintenance
+│       ├── scorecard.yml       # OSSF Scorecard analysis
+│       ├── security.yml        # Security scanning
+│       └── validate.yml        # action.yml validation
 ├── tests/                      # Unit tests
 ├── action.yml                  # GitHub Action definition
 ├── send_deployment_notification.py
@@ -282,9 +316,20 @@ Quick start:
 
 See the issue templates for [bug reports](.github/ISSUE_TEMPLATE/bug_report.yml) and [feature requests](.github/ISSUE_TEMPLATE/feature_request.yml).
 
+## Related Projects
+
+- [Microsoft Graph API - Send Mail](https://learn.microsoft.com/en-us/graph/api/user-sendmail) - API endpoint documentation
+- [send-teams-notification](https://github.com/marcus-hooper/send-teams-notification) - Teams notification action using Adaptive Cards
+- [action-send-mail](https://github.com/dawidd6/action-send-mail) - Alternative email action using SMTP
+
 ## Security
 
-See [SECURITY.md](SECURITY.md) for security policy and best practices.
+- Store Azure credentials in GitHub Secrets (never as plain text)
+- Do not echo or log `AZURE_CLIENT_SECRET` in workflow steps
+- Rotate client secrets before expiration (check Azure Portal for expiry dates)
+- Use minimal Graph API permissions (`Mail.Send` only)
+
+See [SECURITY.md](SECURITY.md) for security policy and reporting vulnerabilities.
 
 ## Changelog
 

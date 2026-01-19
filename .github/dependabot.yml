@@ -8,21 +8,33 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Etc/UTC"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 5
     rebase-strategy: "auto"
     groups:
-      python-dependencies:
+      # Production dependencies - higher risk, review carefully
+      production-deps:
         patterns:
-          - "*"
+          - "azure-identity"
+          - "msgraph-sdk"
+          - "pytz"
+      # Development dependencies - lower risk
+      dev-deps:
+        patterns:
+          - "pytest*"
+          - "ruff"
+          - "mypy"
+          - "types-*"
+          - "bandit"
+          - "pip-audit"
+          - "coverage"
     labels:
       - "dependencies"
-      - "python"
-    # Require manual review for major version updates
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+      - "deps:python"
+    reviewers:
+      - "marcus-hooper"
     commit-message:
       prefix: "deps"
+      include: "scope"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
@@ -32,7 +44,7 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Etc/UTC"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 5
     rebase-strategy: "auto"
     groups:
       github-actions:
@@ -41,5 +53,8 @@ updates:
     labels:
       - "dependencies"
       - "github-actions"
+    reviewers:
+      - "marcus-hooper"
     commit-message:
       prefix: "ci"
+      include: "scope"

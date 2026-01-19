@@ -21,8 +21,8 @@ jobs:
     timeout-minutes: 5
 
     permissions:
+      contents: read
       issues: write
-      pull-requests: write
 
     steps:
       - name: Harden Runner
@@ -44,3 +44,6 @@ jobs:
           config-file: .github/labels.yml
           delete-other-labels: false
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        run: echo "Labels synced from .github/labels.yml" >> $GITHUB_STEP_SUMMARY
