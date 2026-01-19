@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Update GitHub workflows, templates, and Dependabot configuration
+- Bump bandit[sarif] from 1.9.2 to 1.9.3
+- Add setuptools as explicit dependency to prevent Dependabot removal
+
+### Fixed
+
+- Repository URL in project configuration
+
 ## [1.1.0] - 2026-01-18
 
 ### Added
