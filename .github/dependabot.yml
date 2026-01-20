@@ -33,8 +33,26 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      # Catch-all for any other dependencies
+      other-deps:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "azure-identity"
+          - "msgraph-sdk"
+          - "pytz"
+          - "pytest*"
+          - "ruff"
+          - "mypy"
+          - "types-*"
+          - "bandit"
+          - "pip-audit"
+          - "coverage"
+        update-types:
+          - "minor"
+          - "patch"
     labels:
-      - "dependencies"
+      - "deps:all"
       - "deps:python"
     commit-message:
       prefix: "chore(deps)"
@@ -57,14 +75,20 @@ updates:
           - "ossf/*"
           - "github/codeql-action"
           - "step-security/*"
+        update-types:
+          - "minor"
+          - "patch"
       # CI/CD actions
       ci-actions:
         patterns:
           - "actions/*"
           - "github/dependency-review-action"
+        update-types:
+          - "minor"
+          - "patch"
     labels:
-      - "dependencies"
-      - "github-actions"
+      - "deps:all"
+      - "deps:github-actions"
     commit-message:
       prefix: "chore(ci)"
       include: "scope"

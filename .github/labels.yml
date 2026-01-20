@@ -90,6 +90,14 @@
   description: "CI/CD pipeline and automation"
   color: "7057FF"
 
+- name: "area:azure"
+  description: "Azure AD and Microsoft Graph integration"
+  color: "0078D4"
+
+- name: "area:email"
+  description: "Email content and delivery"
+  color: "7057FF"
+
 # Special
 - name: "good first issue"
   description: "Good for newcomers"
@@ -108,11 +116,11 @@
   color: "D73A4A"
 
 # Dependabot
-- name: "dependencies"
+- name: "deps:all"
   description: "Pull requests that update a dependency file"
   color: "0366D6"
 
-- name: "github-actions"
+- name: "deps:github-actions"
   description: "GitHub Actions workflow updates"
   color: "2088FF"
 
@@ -120,19 +128,19 @@
   description: "Python dependency updates"
   color: "3572A5"
 
-- name: "major-update"
+- name: "deps:major"
   description: "Major version update requiring manual review"
   color: "D73A4A"
 
-- name: "needs-review"
+# Automated
+- name: "status:needs-review"
   description: "PR needs manual review before merging"
   color: "FBCA04"
 
-# Automated
-- name: "health-check-failure"
+- name: "status:health-check-failure"
   description: "Automated issue from failed scheduled health check"
   color: "D73A4A"
 
-- name: "stale"
+- name: "status:stale"
   description: "Issue or PR has been inactive"
   color: "CFD3D7"

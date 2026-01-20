@@ -54,11 +54,13 @@ jobs:
       - name: Install dependencies
         id: install-deps
         shell: bash
+        timeout-minutes: 5
         run: pip install --require-hashes -r requirements-dev.txt
 
       - name: Validate action.yml
         id: validate-action
         shell: bash
+        timeout-minutes: 1
         run: |
           echo "Validating action.yml..."
           python -c "import yaml; yaml.safe_load(open('action.yml'))"
@@ -67,11 +69,13 @@ jobs:
       - name: Run linter
         id: lint
         shell: bash
+        timeout-minutes: 2
         run: ruff check .
 
       - name: Run tests
         id: test
         shell: bash
+        timeout-minutes: 5
         run: pytest tests/ -v --junitxml=test-results.xml
 
       - name: Write workflow summary
@@ -120,13 +124,13 @@ jobs:
           allowed-endpoints: >
             api.github.com:443
 
-      - name: Ensure health-check-failure label exists
+      - name: Ensure status:health-check-failure label exists
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          gh label create "health-check-failure" --description "Automated health check detected a failure" --color "d73a4a" --force
+          gh label create "status:health-check-failure" --description "Automated health check detected a failure" --color "d73a4a" --force
 
       - name: Create failure issue
         env:
@@ -149,7 +153,7 @@ jobs:
         run: |
           set -euo pipefail
           # Check for existing open issue to avoid duplicates
-          EXISTING=$(gh issue list --label "health-check-failure" --state open --json number --jq '.[0].number // empty')
+          EXISTING=$(gh issue list --label "status:health-check-failure" --state open --json number --jq '.[0].number // empty')
 
           if [[ -n "$EXISTING" ]]; then
             echo "Existing issue #$EXISTING found, adding comment"
@@ -158,7 +162,7 @@ jobs:
             echo "Creating new failure issue"
             gh issue create \
               --title "Scheduled health check failed" \
-              --label "health-check-failure,type:bug" \
+              --label "status:health-check-failure,type:bug" \
               --body "$ISSUE_BODY"
           fi
 
@@ -187,7 +191,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          issues=$(gh issue list --label "health-check-failure" --state open --json number --jq '.[].number' || true)
+          issues=$(gh issue list --label "status:health-check-failure" --state open --json number --jq '.[].number' || true)
           if [[ -n "$issues" ]]; then
             while read -r issue; do
               echo "Closing issue #$issue"

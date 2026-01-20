@@ -9,3 +9,6 @@ contact_links:
   - name: Documentation
     url: https://github.com/marcus-hooper/deployment-notification-o365#readme
     about: Check the README for usage examples and troubleshooting
+  - name: Releases & Changelog
+    url: https://github.com/marcus-hooper/deployment-notification-o365/releases
+    about: Check if your issue was addressed in a recent release

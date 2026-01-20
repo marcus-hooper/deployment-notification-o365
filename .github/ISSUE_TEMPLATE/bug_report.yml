@@ -10,14 +10,14 @@ body:
 
         **Before submitting**, please review the [README](https://github.com/marcus-hooper/deployment-notification-o365#readme) for usage guidance.
 
-        **Tip**: Enable debug logging by setting `ACTIONS_STEP_DEBUG: true` in your repository secrets for more detailed output.
+        **Tip**: Enable debug logging by adding `ACTIONS_STEP_DEBUG: true` to your repository secrets or workflow env. This provides more detailed output in the logs.
 
   - type: textarea
     id: description
     attributes:
-      label: Description
-      description: A clear description of the bug.
-      placeholder: What happened?
+      label: Bug Summary
+      description: A brief, one or two sentence summary of the issue
+      placeholder: "e.g., Email fails to send when NOTIFICATION_TO contains multiple addresses"
     validations:
       required: true
 
@@ -99,7 +99,7 @@ body:
     attributes:
       label: Action Version
       description: Which version of the action are you using?
-      placeholder: "@v1, @main, or specific SHA"
+      placeholder: "v1, main, or specific SHA"
     validations:
       required: true
 
@@ -148,9 +148,10 @@ body:
     attributes:
       label: Prerequisites
       options:
-        - label: I have searched existing issues for duplicates
+        - label: I have [searched existing issues](https://github.com/marcus-hooper/deployment-notification-o365/issues?q=is%3Aissue) for duplicates
           required: true
         - label: Azure AD app has Mail.Send permission
+          required: true
         - label: Sender mailbox exists in Microsoft 365
 
   - type: textarea

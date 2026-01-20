@@ -7,6 +7,7 @@ on:
     paths-ignore: &paths-ignore
       - '**.md'
       - 'docs/**'
+      - '.github/*.md'
       - '.github/ISSUE_TEMPLATE/**'
       - 'LICENSE'
   pull_request:
@@ -96,6 +97,7 @@ jobs:
 
   type-check:
     name: Type Check
+    needs: [lint]
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -132,6 +134,7 @@ jobs:
 
   test:
     name: Run Tests
+    needs: [lint, type-check]
     runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
