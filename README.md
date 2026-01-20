@@ -1,12 +1,13 @@
 # Deployment Notification O365
 
 [![CI](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/ci.yml/badge.svg)](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/ci.yml)
-[![GitHub release](https://img.shields.io/github/v/release/marcus-hooper/deployment-notification-o365)](https://github.com/marcus-hooper/deployment-notification-o365/releases)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![codecov](https://codecov.io/gh/marcus-hooper/deployment-notification-o365/graph/badge.svg)](https://codecov.io/gh/marcus-hooper/deployment-notification-o365)
 [![CodeQL](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/codeql.yml/badge.svg)](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/codeql.yml)
 [![Security](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/security.yml/badge.svg)](https://github.com/marcus-hooper/deployment-notification-o365/actions/workflows/security.yml)
 [![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/marcus-hooper/deployment-notification-o365/badge)](https://scorecard.dev/viewer/?uri=github.com/marcus-hooper/deployment-notification-o365)
+[![GitHub release](https://img.shields.io/github/v/release/marcus-hooper/deployment-notification-o365)](https://github.com/marcus-hooper/deployment-notification-o365/releases)
+[![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A GitHub Action that sends deployment notifications via email using Microsoft Graph API and Microsoft Entra ID (formerly Azure Active Directory).
 
