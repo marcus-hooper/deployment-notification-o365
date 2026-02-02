@@ -92,6 +92,23 @@ updates:
         update-types:
           - "minor"
           - "patch"
+      # Catch-all for any other actions
+      other-actions:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "ossf/*"
+          - "github/codeql-action"
+          - "step-security/*"
+          - "gitleaks/*"
+          - "actions/*"
+          - "dorny/*"
+          - "codecov/*"
+          - "dependabot/*"
+          - "EndBug/*"
+        update-types:
+          - "minor"
+          - "patch"
     labels:
       - "deps:all"
       - "deps:github-actions"
