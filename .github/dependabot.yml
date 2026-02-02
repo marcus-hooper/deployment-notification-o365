@@ -85,7 +85,6 @@ updates:
       ci-actions:
         patterns:
           - "actions/*"
-          - "github/dependency-review-action"
           - "dorny/*"
           - "codecov/*"
           - "dependabot/*"
