@@ -30,6 +30,7 @@ updates:
           - "bandit"
           - "pip-audit"
           - "coverage"
+          - "setuptools"
         update-types:
           - "minor"
           - "patch"
@@ -48,6 +49,7 @@ updates:
           - "bandit"
           - "pip-audit"
           - "coverage"
+          - "setuptools"
         update-types:
           - "minor"
           - "patch"
@@ -75,6 +77,7 @@ updates:
           - "ossf/*"
           - "github/codeql-action"
           - "step-security/*"
+          - "gitleaks/*"
         update-types:
           - "minor"
           - "patch"
@@ -83,6 +86,10 @@ updates:
         patterns:
           - "actions/*"
           - "github/dependency-review-action"
+          - "dorny/*"
+          - "codecov/*"
+          - "dependabot/*"
+          - "EndBug/*"
         update-types:
           - "minor"
           - "patch"
