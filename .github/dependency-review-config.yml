@@ -19,6 +19,13 @@ license-check: true
 show-openssf-scorecard: true
 warn-on-openssf-scorecard-level: 3
 
+# Exempt specific packages whose license metadata is misidentified by the scanner.
+# Both are MIT-licensed Microsoft packages; the scanner misreads azure-identity's CLA
+# metadata as a license and fails to detect msgraph-sdk's license entirely.
+allow-dependencies-licenses:
+  - "pkg:pypi/azure-identity"
+  - "pkg:pypi/msgraph-sdk"
+
 # Allow-list of approved permissive licenses
 # Using allow-list instead of deny-list per actions/dependency-review-action#997
 allow-licenses:
