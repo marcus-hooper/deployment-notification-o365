@@ -167,9 +167,9 @@ azure-identity==1.25.2 \
     # via
     #   -r requirements.txt
     #   msgraph-sdk
-bandit[sarif]==1.9.3 \
-    --hash=sha256:4745917c88d2246def79748bde5e08b9d5e9b92f877863d43fab70cd8814ce6a \
-    --hash=sha256:ade4b9b7786f89ef6fc7344a52b34558caec5da74cb90373aed01de88472f774
+bandit[sarif]==1.9.4 \
+    --hash=sha256:b589e5de2afe70bd4d53fa0c1da6199f4085af666fde00e8a034f152a52cd628 \
+    --hash=sha256:f89ffa663767f5a0585ea075f01020207e966a9c0f2b9ef56a57c7963a3f6f8e
     # via -r requirements-dev.in
 boolean-py==5.0 \
     --hash=sha256:60cbc4bad079753721d32649545505362c754e121570ada4658b852a3a318d95 \
