@@ -198,4 +198,5 @@ jobs:
 
       - name: Run pip-audit
         run: |
-          pip-audit --desc on
+          # CVE-2026-4539: pygments ReDoS in AdlLexer (local-only, no fix available yet)
+          pip-audit --desc on --ignore-vuln CVE-2026-4539
