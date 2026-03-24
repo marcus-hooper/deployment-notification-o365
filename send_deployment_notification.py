@@ -3,8 +3,8 @@ import datetime
 import logging
 import os
 import sys
+from zoneinfo import ZoneInfo
 
-import pytz
 from azure.identity import ClientSecretCredential
 from msgraph import GraphServiceClient
 from msgraph.generated.models.body_type import BodyType
@@ -33,8 +33,7 @@ def get_env_variable(name, required=True):
 def get_formatted_time():
     """Get the current time formatted in Eastern Time."""
     local_time = datetime.datetime.now()
-    eastern = pytz.timezone("US/Eastern")
-    eastern_time = local_time.astimezone(eastern)
+    eastern_time = local_time.astimezone(ZoneInfo("US/Eastern"))
     return eastern_time.strftime("%Y-%m-%d %H:%M:%S")
 
 

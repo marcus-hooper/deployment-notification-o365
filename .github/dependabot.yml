@@ -16,7 +16,6 @@ updates:
         patterns:
           - "azure-identity"
           - "msgraph-sdk"
-          - "pytz"
         update-types:
           - "minor"
           - "patch"
@@ -41,7 +40,6 @@ updates:
         exclude-patterns:
           - "azure-identity"
           - "msgraph-sdk"
-          - "pytz"
           - "pytest*"
           - "ruff"
           - "mypy"

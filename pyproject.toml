@@ -10,7 +10,6 @@ authors = [{ name = "marcus-hooper" }]
 dependencies = [
     "azure-identity>=1.25.0,<2.0.0",
     "msgraph-sdk>=1.52.0,<2.0.0",
-    "pytz>=2024.1",
 ]
 
 [project.optional-dependencies]
@@ -20,7 +19,6 @@ dev = [
     "pytest-asyncio>=0.23.0",
     "ruff>=0.4.0",
     "mypy>=1.10.0",
-    "types-pytz>=2024.1.0",
     "bandit>=1.7.0",
     "pip-audit>=2.7.0",
 ]
