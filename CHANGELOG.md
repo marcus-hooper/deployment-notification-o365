@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Unit tests for core functions: `initialize_graph_client`, `prepare_email_request`, `send_email`, and `main` orchestration
+
 ### Changed
 
 - Update GitHub workflows, templates, and Dependabot configuration
