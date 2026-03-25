@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Retry logic for sending emails with exponential backoff on transient Graph API errors (429, 503, 504, timeouts)
+- Retry-After header support for 429 rate-limit responses
+- Unit tests for retry helpers (`_is_retryable`, `_get_retry_delay`) and retry behavior in `send_email`
 - Unit tests for core functions: `initialize_graph_client`, `prepare_email_request`, `send_email`, and `main` orchestration
 - Test coverage for named exception handling: `CredentialUnavailableError`, `ClientAuthenticationError`, `HttpResponseError`, `ODataError`, and `TimeoutError`
 

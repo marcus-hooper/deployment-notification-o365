@@ -169,7 +169,9 @@ async def send_email(graph_client, sender, request_body):
             logging.info(f"Retrying in {delay}s (attempt {attempt + 2}/{MAX_RETRIES})")
             await asyncio.sleep(delay)
 
-    raise last_error
+    if last_error is not None:
+        raise last_error
+    raise RuntimeError("send_email failed: no retries attempted")
 
 
 # Main Function
