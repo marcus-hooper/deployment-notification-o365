@@ -23,19 +23,8 @@ MAX_RETRIES = 3
 RETRY_BASE_DELAY = 1  # seconds
 NON_RETRYABLE_STATUS_CODES = {400, 401, 403, 404}
 
-# Configure logging with defaults so third-party library log lines don't crash
-_LOG_DEFAULTS = {"repo": "unknown", "env": "unknown"}
-_handler = logging.StreamHandler()
-_handler.setFormatter(
-    logging.Formatter(
-        "%(asctime)s - %(levelname)s - [%(repo)s %(env)s] %(message)s",
-        defaults=_LOG_DEFAULTS,
-    )
-)
-logging.basicConfig(level=logging.INFO, handlers=[_handler])
-
-# Module-level logger — replaced by a LoggerAdapter with context in main()
-logger = logging.LoggerAdapter(logging.getLogger(__name__), extra=_LOG_DEFAULTS.copy())
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 
 # Utility Functions
@@ -43,7 +32,7 @@ def get_env_variable(name, required=True):
     """Fetch and validate environment variables."""
     value = os.getenv(name)
     if required and not value:
-        logger.error(f"Missing required environment variable: {name}")
+        logging.error(f"Missing required environment variable: {name}")
         raise ValueError(f"Environment variable '{name}' is not set.")
     return value
 
@@ -67,7 +56,7 @@ def prepare_email_content(repository, environment, actor):
         with open("commit_message.txt") as file:
             commit_message = file.read().strip()
     except FileNotFoundError:
-        logger.warning("commit_message.txt not found. No commit message will be included.")
+        logging.warning("commit_message.txt not found. No commit message will be included.")
 
     content = (
         f"Repository: {repository}\n"
@@ -113,16 +102,16 @@ def initialize_graph_client(tenant_id, client_id, client_secret):
             client_id=client_id,
             client_secret=client_secret,
         )
-        logger.info("Azure credential initialized successfully.")
+        logging.info("Azure credential initialized successfully.")
         scopes = ["https://graph.microsoft.com/.default"]
         return GraphServiceClient(credential, scopes=scopes)
     except CredentialUnavailableError:
-        logger.error(
+        logging.error(
             "Azure credential unavailable: check AZURE_TENANT_ID, AZURE_CLIENT_ID, and AZURE_CLIENT_SECRET"
         )
         raise
     except ClientAuthenticationError:
-        logger.error("Azure authentication rejected by Azure AD")
+        logging.error("Azure authentication rejected by Azure AD")
         raise
 
 
@@ -138,7 +127,7 @@ def prepare_email_request(subject, content, to_recipients):
             save_to_sent_items=True,
         )
     except (TypeError, ValueError) as e:
-        logger.error(f"Failed to prepare email request body: {e}")
+        logging.error(f"Failed to prepare email request body: {e}")
         raise
 
 
@@ -169,30 +158,30 @@ async def send_email(graph_client, sender, request_body):
     """Async function to send the email with exponential backoff retry."""
     user_request = graph_client.users.by_user_id(sender)
     if not user_request:
-        logger.error("Failed to get user request.")
+        logging.error("Failed to get user request.")
         raise ValueError("User request initialization failed.")
 
     last_error = None
     for attempt in range(MAX_RETRIES):
         try:
             await user_request.send_mail.post(request_body)
-            logger.info("Email sent successfully.")
+            logging.info("Email sent successfully.")
             return
         except HttpResponseError as e:
             last_error = e
-            logger.error(f"Graph API HTTP error: {e.status_code} {e.reason}")
+            logging.error(f"Graph API HTTP error: {e.status_code} {e.reason}")
             if not _is_retryable(e):
                 raise
         except ODataError as e:
-            logger.error(f"Graph API OData error: {e.error.code if e.error else 'unknown'}")
+            logging.error(f"Graph API OData error: {e.error.code if e.error else 'unknown'}")
             raise
         except TimeoutError as e:
             last_error = e
-            logger.error("Graph API request timed out")
+            logging.error("Graph API request timed out")
 
         if attempt < MAX_RETRIES - 1:
             delay = _get_retry_delay(last_error, attempt)
-            logger.info(f"Retrying in {delay}s (attempt {attempt + 2}/{MAX_RETRIES})")
+            logging.info(f"Retrying in {delay}s (attempt {attempt + 2}/{MAX_RETRIES})")
             await asyncio.sleep(delay)
 
     if last_error is not None:
@@ -202,7 +191,6 @@ async def send_email(graph_client, sender, request_body):
 
 # Main Function
 def main():
-    global logger
     try:
         # Fetch required environment variables
         github_repository = get_env_variable("GITHUB_REPOSITORY")
@@ -220,15 +208,6 @@ def main():
         )
         to_recipients = prepare_recipients(notification_to)
 
-        # Set structured logging context
-        logger = logging.LoggerAdapter(
-            logging.getLogger(__name__),
-            extra={
-                "repo": github_repository,
-                "env": github_environment,
-            },
-        )
-
         # Initialize Graph client
         graph_client = initialize_graph_client(tenant_id, client_id, client_secret)
 
@@ -238,16 +217,16 @@ def main():
         # Send the email
         asyncio.run(send_email(graph_client, notification_from, request_body))
     except ValueError as e:
-        logger.error(f"Configuration error: {e}")
+        logging.error(f"Configuration error: {e}")
         sys.exit(1)
     except (CredentialUnavailableError, ClientAuthenticationError) as e:
-        logger.error(f"Authentication failed: {type(e).__name__}")
+        logging.error(f"Authentication failed: {type(e).__name__}")
         sys.exit(1)
     except (HttpResponseError, ODataError, TimeoutError) as e:
-        logger.error(f"Failed to send email: {type(e).__name__}")
+        logging.error(f"Failed to send email: {type(e).__name__}")
         sys.exit(1)
     except Exception:
-        logger.error("An unexpected error occurred while sending the email")
+        logging.error("An unexpected error occurred while sending the email")
         sys.exit(1)
 
 
