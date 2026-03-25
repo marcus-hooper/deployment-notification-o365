@@ -71,11 +71,26 @@ def prepare_email_content(repository, environment, actor):
 
 
 def prepare_recipients(notification_to):
-    """Create a list of Recipient objects."""
-    return [
-        Recipient(email_address=EmailAddress(address=email.strip()))
-        for email in notification_to.split(",")
-    ]
+    """Create a list of Recipient objects with email validation."""
+    emails = [email.strip() for email in notification_to.split(",")]
+    emails = [email for email in emails if email]
+
+    if not emails:
+        raise ValueError("No valid email addresses provided in NOTIFICATION_TO")
+
+    invalid = []
+    for email in emails:
+        if email.count("@") != 1:
+            invalid.append(email)
+        else:
+            local, domain = email.split("@")
+            if not local or not domain:
+                invalid.append(email)
+
+    if invalid:
+        raise ValueError(f"Invalid email address(es): {', '.join(invalid)}")
+
+    return [Recipient(email_address=EmailAddress(address=email)) for email in emails]
 
 
 # Azure Graph Client Functions

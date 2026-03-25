@@ -17,6 +17,7 @@ A GitHub Action that sends deployment notifications via email using Microsoft Gr
 - Integrates with Microsoft Graph API for email delivery
 - Uses Microsoft Entra ID for secure authentication
 - Includes repository, environment, timestamp, and recent commit messages
+- Validates recipient email addresses with clear error messages for misconfiguration
 - Automatic retry with exponential backoff for transient errors (429, 503, 504, timeouts)
 - Cross-platform (runs on Linux, macOS, and Windows runners)
 
@@ -231,6 +232,8 @@ These variables are automatically available in GitHub Actions workflows and do n
 | `AADSTS700016: Application not found` | Wrong Client ID or Tenant ID | Verify IDs in Azure Portal > App registrations |
 | `Authorization_RequestDenied` | Missing `Mail.Send` permission | Add permission and grant admin consent |
 | `ErrorItemNotFound` / `MailboxNotFound` | `NOTIFICATION_FROM` email doesn't exist | Use an email with a valid mailbox in your tenant |
+| `Invalid email address(es)` | `NOTIFICATION_TO` contains malformed emails | Check that all addresses have exactly one `@` with non-empty local and domain parts |
+| `No valid email addresses provided` | `NOTIFICATION_TO` is empty or all entries are blank | Provide at least one valid email address |
 | `Missing required environment variable` | Env var not set or empty | Check secrets are correctly configured in GitHub |
 
 ### Debug Tips

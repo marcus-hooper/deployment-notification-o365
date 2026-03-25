@@ -1,3 +1,5 @@
+import pytest
+
 import send_deployment_notification as script
 
 
@@ -129,3 +131,51 @@ class TestPrepareRecipients:
         """Should handle plus addressing in emails."""
         result = script.prepare_recipients("user+tag@example.com")
         assert result[0].email_address.address == "user+tag@example.com"
+
+    def test_skips_empty_entries_from_trailing_comma(self):
+        """Should skip empty entries from trailing commas."""
+        result = script.prepare_recipients("user@example.com,")
+        assert len(result) == 1
+        assert result[0].email_address.address == "user@example.com"
+
+    def test_skips_empty_entries_between_commas(self):
+        """Should skip empty entries between commas."""
+        result = script.prepare_recipients("user1@example.com,,user2@example.com")
+        assert len(result) == 2
+
+    def test_rejects_email_without_at(self):
+        """Should reject emails missing @ character."""
+        with pytest.raises(ValueError, match="Invalid email"):
+            script.prepare_recipients("not-an-email")
+
+    def test_rejects_email_with_multiple_at(self):
+        """Should reject emails with more than one @ character."""
+        with pytest.raises(ValueError, match="Invalid email"):
+            script.prepare_recipients("user@@example.com")
+
+    def test_rejects_email_with_empty_local_part(self):
+        """Should reject emails with empty local part."""
+        with pytest.raises(ValueError, match="Invalid email"):
+            script.prepare_recipients("@example.com")
+
+    def test_rejects_email_with_empty_domain(self):
+        """Should reject emails with empty domain."""
+        with pytest.raises(ValueError, match="Invalid email"):
+            script.prepare_recipients("user@")
+
+    def test_rejects_all_empty_input(self):
+        """Should raise ValueError when all entries are empty."""
+        with pytest.raises(ValueError, match="No valid email"):
+            script.prepare_recipients(",,,")
+
+    def test_lists_all_invalid_addresses(self):
+        """Should list all invalid addresses in the error message."""
+        with pytest.raises(ValueError, match="not-valid") as exc_info:
+            script.prepare_recipients("not-valid, also-bad, user@ok.com")
+        assert "not-valid" in str(exc_info.value)
+        assert "also-bad" in str(exc_info.value)
+
+    def test_valid_emails_pass_with_mixed_trailing_commas(self):
+        """Valid emails should pass even with extra commas and whitespace."""
+        result = script.prepare_recipients(" a@b.com , c@d.com , ")
+        assert len(result) == 2
