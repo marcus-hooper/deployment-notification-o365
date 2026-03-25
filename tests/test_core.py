@@ -147,6 +147,7 @@ class TestMain:
     """Tests for main function."""
 
     @patch("send_deployment_notification.asyncio.run")
+    @patch("send_deployment_notification.send_email", new=MagicMock())
     @patch("send_deployment_notification.prepare_email_request")
     @patch("send_deployment_notification.initialize_graph_client")
     @patch("send_deployment_notification.prepare_recipients")
@@ -182,6 +183,7 @@ class TestMain:
 
     @patch("send_deployment_notification.sys.exit")
     @patch("send_deployment_notification.asyncio.run", side_effect=RuntimeError("send failed"))
+    @patch("send_deployment_notification.send_email", new=MagicMock())
     @patch("send_deployment_notification.prepare_email_request")
     @patch("send_deployment_notification.initialize_graph_client")
     @patch("send_deployment_notification.prepare_recipients")
