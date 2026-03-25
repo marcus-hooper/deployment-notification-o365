@@ -17,6 +17,7 @@ A GitHub Action that sends deployment notifications via email using Microsoft Gr
 - Integrates with Microsoft Graph API for email delivery
 - Uses Microsoft Entra ID for secure authentication
 - Includes repository, environment, timestamp, and recent commit messages
+- Automatic retry with exponential backoff for transient errors (429, 503, 504, timeouts)
 - Cross-platform (runs on Linux, macOS, and Windows runners)
 
 ## Quick Start
@@ -211,13 +212,13 @@ These variables are automatically available in GitHub Actions workflows and do n
 2. Reads `commit_message.txt` if present in the working directory
 3. Formats email with repository, environment, timestamp, and commits
 4. Authenticates via Microsoft Entra ID using client credentials flow
-5. Sends email via Microsoft Graph API (`/users/{sender}/sendMail`)
+5. Sends email via Microsoft Graph API (`/users/{sender}/sendMail`) with automatic retry for transient errors
 
 ## Limitations
 
 - **Plain text emails only** - HTML formatting is not supported
 - **US/Eastern timezone** - Timestamps use US/Eastern timezone; not configurable
-- **No retry logic** - Email send is attempted once; fails immediately on error
+- **Limited retry scope** - Retries transient Graph API errors (429/503/504/timeout) up to 3 times with exponential backoff; non-retryable errors (400/401/403/404) fail immediately
 - **Environment variables only** - Uses `env:` rather than `with:` inputs
 
 ## Troubleshooting
