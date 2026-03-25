@@ -7,6 +7,76 @@ from azure.identity import CredentialUnavailableError
 import send_deployment_notification as script
 
 
+class TestIsRetryable:
+    """Tests for _is_retryable helper."""
+
+    def test_timeout_error_is_retryable(self):
+        assert script._is_retryable(TimeoutError()) is True
+
+    def test_http_429_is_retryable(self):
+        error = HttpResponseError(message="rate limited")
+        error.status_code = 429
+        assert script._is_retryable(error) is True
+
+    def test_http_503_is_retryable(self):
+        error = HttpResponseError(message="unavailable")
+        error.status_code = 503
+        assert script._is_retryable(error) is True
+
+    def test_http_504_is_retryable(self):
+        error = HttpResponseError(message="gateway timeout")
+        error.status_code = 504
+        assert script._is_retryable(error) is True
+
+    def test_http_400_is_not_retryable(self):
+        error = HttpResponseError(message="bad request")
+        error.status_code = 400
+        assert script._is_retryable(error) is False
+
+    def test_http_401_is_not_retryable(self):
+        error = HttpResponseError(message="unauthorized")
+        error.status_code = 401
+        assert script._is_retryable(error) is False
+
+    def test_http_403_is_not_retryable(self):
+        error = HttpResponseError(message="forbidden")
+        error.status_code = 403
+        assert script._is_retryable(error) is False
+
+    def test_http_404_is_not_retryable(self):
+        error = HttpResponseError(message="not found")
+        error.status_code = 404
+        assert script._is_retryable(error) is False
+
+    def test_odata_error_is_not_retryable(self):
+        assert script._is_retryable(script.ODataError("odata fail")) is False
+
+
+class TestGetRetryDelay:
+    """Tests for _get_retry_delay helper."""
+
+    def test_exponential_backoff_attempt_0(self):
+        assert script._get_retry_delay(TimeoutError(), 0) == 1
+
+    def test_exponential_backoff_attempt_1(self):
+        assert script._get_retry_delay(TimeoutError(), 1) == 2
+
+    def test_exponential_backoff_attempt_2(self):
+        assert script._get_retry_delay(TimeoutError(), 2) == 4
+
+    def test_respects_retry_after_header(self):
+        error = HttpResponseError(message="rate limited")
+        error.status_code = 429
+        error.headers = {"Retry-After": "10"}
+        assert script._get_retry_delay(error, 0) == 10
+
+    def test_falls_back_to_backoff_on_invalid_retry_after(self):
+        error = HttpResponseError(message="rate limited")
+        error.status_code = 429
+        error.headers = {"Retry-After": "not-a-number"}
+        assert script._get_retry_delay(error, 1) == 2
+
+
 class TestInitializeGraphClient:
     """Tests for initialize_graph_client function."""
 
@@ -141,8 +211,8 @@ class TestSendEmail:
             await script.send_email(mock_client, "sender@example.com", MagicMock())
 
     @pytest.mark.asyncio
-    async def test_raises_on_http_response_error(self):
-        """Should propagate HttpResponseError from Graph API."""
+    async def test_raises_immediately_on_non_retryable_http_error(self):
+        """Should not retry non-retryable HTTP errors (400, 401, 403, 404)."""
         mock_client = MagicMock()
         mock_user = MagicMock()
         error = HttpResponseError(message="forbidden")
@@ -154,9 +224,12 @@ class TestSendEmail:
         with pytest.raises(HttpResponseError):
             await script.send_email(mock_client, "sender@example.com", MagicMock())
 
+        # Should only be called once — no retries
+        assert mock_user.send_mail.post.await_count == 1
+
     @pytest.mark.asyncio
-    async def test_raises_on_odata_error(self):
-        """Should propagate ODataError from Graph API."""
+    async def test_raises_immediately_on_odata_error(self):
+        """Should not retry ODataError — always non-retryable."""
         mock_client = MagicMock()
         mock_user = MagicMock()
         mock_user.send_mail.post = AsyncMock(side_effect=script.ODataError("odata fail"))
@@ -165,9 +238,12 @@ class TestSendEmail:
         with pytest.raises(script.ODataError):
             await script.send_email(mock_client, "sender@example.com", MagicMock())
 
+        assert mock_user.send_mail.post.await_count == 1
+
     @pytest.mark.asyncio
-    async def test_raises_on_timeout(self):
-        """Should propagate TimeoutError."""
+    @patch("send_deployment_notification.asyncio.sleep", new_callable=AsyncMock)
+    async def test_retries_on_timeout_error(self, mock_sleep):
+        """Should retry on TimeoutError up to MAX_RETRIES times."""
         mock_client = MagicMock()
         mock_user = MagicMock()
         mock_user.send_mail.post = AsyncMock(side_effect=TimeoutError())
@@ -175,6 +251,76 @@ class TestSendEmail:
 
         with pytest.raises(TimeoutError):
             await script.send_email(mock_client, "sender@example.com", MagicMock())
+
+        assert mock_user.send_mail.post.await_count == script.MAX_RETRIES
+        assert mock_sleep.await_count == script.MAX_RETRIES - 1
+
+    @pytest.mark.asyncio
+    @patch("send_deployment_notification.asyncio.sleep", new_callable=AsyncMock)
+    async def test_retries_on_retryable_http_error(self, mock_sleep):
+        """Should retry on retryable HTTP status codes (429, 503, 504)."""
+        mock_client = MagicMock()
+        mock_user = MagicMock()
+        error = HttpResponseError(message="service unavailable")
+        error.status_code = 503
+        error.reason = "Service Unavailable"
+        mock_user.send_mail.post = AsyncMock(side_effect=error)
+        mock_client.users.by_user_id.return_value = mock_user
+
+        with pytest.raises(HttpResponseError):
+            await script.send_email(mock_client, "sender@example.com", MagicMock())
+
+        assert mock_user.send_mail.post.await_count == script.MAX_RETRIES
+
+    @pytest.mark.asyncio
+    @patch("send_deployment_notification.asyncio.sleep", new_callable=AsyncMock)
+    async def test_succeeds_after_transient_failure(self, mock_sleep):
+        """Should succeed when a retryable error is followed by success."""
+        mock_client = MagicMock()
+        mock_user = MagicMock()
+        error = HttpResponseError(message="service unavailable")
+        error.status_code = 503
+        error.reason = "Service Unavailable"
+        mock_user.send_mail.post = AsyncMock(side_effect=[error, None])
+        mock_client.users.by_user_id.return_value = mock_user
+
+        await script.send_email(mock_client, "sender@example.com", MagicMock())
+
+        assert mock_user.send_mail.post.await_count == 2
+        mock_sleep.assert_awaited_once_with(1)  # first retry delay: 1s
+
+    @pytest.mark.asyncio
+    @patch("send_deployment_notification.asyncio.sleep", new_callable=AsyncMock)
+    async def test_uses_exponential_backoff_delays(self, mock_sleep):
+        """Should use exponential backoff delays (1s, 2s)."""
+        mock_client = MagicMock()
+        mock_user = MagicMock()
+        mock_user.send_mail.post = AsyncMock(side_effect=TimeoutError())
+        mock_client.users.by_user_id.return_value = mock_user
+
+        with pytest.raises(TimeoutError):
+            await script.send_email(mock_client, "sender@example.com", MagicMock())
+
+        delays = [call.args[0] for call in mock_sleep.await_args_list]
+        assert delays == [1, 2]
+
+    @pytest.mark.asyncio
+    @patch("send_deployment_notification.asyncio.sleep", new_callable=AsyncMock)
+    async def test_respects_retry_after_header_on_429(self, mock_sleep):
+        """Should use Retry-After header value for 429 responses."""
+        mock_client = MagicMock()
+        mock_user = MagicMock()
+        error = HttpResponseError(message="rate limited")
+        error.status_code = 429
+        error.reason = "Too Many Requests"
+        error.headers = {"Retry-After": "7"}
+        # Fail once with 429, then succeed
+        mock_user.send_mail.post = AsyncMock(side_effect=[error, None])
+        mock_client.users.by_user_id.return_value = mock_user
+
+        await script.send_email(mock_client, "sender@example.com", MagicMock())
+
+        mock_sleep.assert_awaited_once_with(7)
 
 
 class TestMain:

@@ -18,6 +18,11 @@ from msgraph.generated.users.item.send_mail.send_mail_post_request_body import (
     SendMailPostRequestBody,
 )
 
+# Retry configuration
+MAX_RETRIES = 3
+RETRY_BASE_DELAY = 1  # seconds
+NON_RETRYABLE_STATUS_CODES = {400, 401, 403, 404}
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
@@ -111,25 +116,60 @@ def prepare_email_request(subject, content, to_recipients):
         raise
 
 
+def _is_retryable(error):
+    """Determine if an error is retryable."""
+    if isinstance(error, TimeoutError):
+        return True
+    if isinstance(error, HttpResponseError):
+        return error.status_code not in NON_RETRYABLE_STATUS_CODES
+    return False
+
+
+def _get_retry_delay(error, attempt):
+    """Calculate retry delay, respecting Retry-After header for 429 responses."""
+    if isinstance(error, HttpResponseError) and error.status_code == 429:
+        retry_after = (
+            getattr(error, "headers", {}).get("Retry-After") if hasattr(error, "headers") else None
+        )
+        if retry_after:
+            try:
+                return int(retry_after)
+            except (ValueError, TypeError):
+                pass
+    return RETRY_BASE_DELAY * (2**attempt)
+
+
 async def send_email(graph_client, sender, request_body):
-    """Async function to send the email."""
+    """Async function to send the email with exponential backoff retry."""
     user_request = graph_client.users.by_user_id(sender)
     if not user_request:
         logging.error("Failed to get user request.")
         raise ValueError("User request initialization failed.")
 
-    try:
-        await user_request.send_mail.post(request_body)
-        logging.info("Email sent successfully.")
-    except HttpResponseError as e:
-        logging.error(f"Graph API HTTP error: {e.status_code} {e.reason}")
-        raise
-    except ODataError as e:
-        logging.error(f"Graph API OData error: {e.error.code if e.error else 'unknown'}")
-        raise
-    except TimeoutError:
-        logging.error("Graph API request timed out")
-        raise
+    last_error = None
+    for attempt in range(MAX_RETRIES):
+        try:
+            await user_request.send_mail.post(request_body)
+            logging.info("Email sent successfully.")
+            return
+        except HttpResponseError as e:
+            last_error = e
+            logging.error(f"Graph API HTTP error: {e.status_code} {e.reason}")
+            if not _is_retryable(e):
+                raise
+        except ODataError as e:
+            logging.error(f"Graph API OData error: {e.error.code if e.error else 'unknown'}")
+            raise
+        except TimeoutError as e:
+            last_error = e
+            logging.error("Graph API request timed out")
+
+        if attempt < MAX_RETRIES - 1:
+            delay = _get_retry_delay(last_error, attempt)
+            logging.info(f"Retrying in {delay}s (attempt {attempt + 2}/{MAX_RETRIES})")
+            await asyncio.sleep(delay)
+
+    raise last_error
 
 
 # Main Function
