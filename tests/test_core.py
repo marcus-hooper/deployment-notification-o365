@@ -1,6 +1,8 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from azure.core.exceptions import ClientAuthenticationError, HttpResponseError
+from azure.identity import CredentialUnavailableError
 
 import send_deployment_notification as script
 
@@ -38,16 +40,23 @@ class TestInitializeGraphClient:
         assert result is mock_client
 
     @patch("send_deployment_notification.ClientSecretCredential")
-    def test_raises_on_credential_failure(self, mock_cred_cls):
-        """Should propagate exception when credential creation fails."""
-        mock_cred_cls.side_effect = ValueError("bad creds")
-        with pytest.raises(ValueError, match="bad creds"):
+    def test_raises_on_credential_unavailable(self, mock_cred_cls):
+        """Should propagate CredentialUnavailableError when credentials are missing."""
+        mock_cred_cls.side_effect = CredentialUnavailableError(message="bad creds")
+        with pytest.raises(CredentialUnavailableError):
+            script.initialize_graph_client("tid", "cid", "csecret")
+
+    @patch("send_deployment_notification.ClientSecretCredential")
+    def test_raises_on_client_auth_error(self, mock_cred_cls):
+        """Should propagate ClientAuthenticationError when authentication is rejected."""
+        mock_cred_cls.side_effect = ClientAuthenticationError(message="auth rejected")
+        with pytest.raises(ClientAuthenticationError):
             script.initialize_graph_client("tid", "cid", "csecret")
 
     @patch("send_deployment_notification.GraphServiceClient")
     @patch("send_deployment_notification.ClientSecretCredential")
-    def test_raises_on_graph_client_failure(self, mock_cred_cls, mock_graph_cls):
-        """Should propagate exception when GraphServiceClient creation fails."""
+    def test_does_not_catch_unexpected_exceptions(self, mock_cred_cls, mock_graph_cls):
+        """Should let unexpected exceptions propagate uncaught."""
         mock_graph_cls.side_effect = RuntimeError("graph init failed")
         with pytest.raises(RuntimeError, match="graph init failed"):
             script.initialize_graph_client("tid", "cid", "csecret")
@@ -132,14 +141,39 @@ class TestSendEmail:
             await script.send_email(mock_client, "sender@example.com", MagicMock())
 
     @pytest.mark.asyncio
-    async def test_raises_on_post_failure(self):
-        """Should propagate exception when send_mail.post fails."""
+    async def test_raises_on_http_response_error(self):
+        """Should propagate HttpResponseError from Graph API."""
         mock_client = MagicMock()
         mock_user = MagicMock()
-        mock_user.send_mail.post = AsyncMock(side_effect=RuntimeError("send failed"))
+        error = HttpResponseError(message="forbidden")
+        error.status_code = 403
+        error.reason = "Forbidden"
+        mock_user.send_mail.post = AsyncMock(side_effect=error)
         mock_client.users.by_user_id.return_value = mock_user
 
-        with pytest.raises(RuntimeError, match="send failed"):
+        with pytest.raises(HttpResponseError):
+            await script.send_email(mock_client, "sender@example.com", MagicMock())
+
+    @pytest.mark.asyncio
+    async def test_raises_on_odata_error(self):
+        """Should propagate ODataError from Graph API."""
+        mock_client = MagicMock()
+        mock_user = MagicMock()
+        mock_user.send_mail.post = AsyncMock(side_effect=script.ODataError("odata fail"))
+        mock_client.users.by_user_id.return_value = mock_user
+
+        with pytest.raises(script.ODataError):
+            await script.send_email(mock_client, "sender@example.com", MagicMock())
+
+    @pytest.mark.asyncio
+    async def test_raises_on_timeout(self):
+        """Should propagate TimeoutError."""
+        mock_client = MagicMock()
+        mock_user = MagicMock()
+        mock_user.send_mail.post = AsyncMock(side_effect=TimeoutError())
+        mock_client.users.by_user_id.return_value = mock_user
+
+        with pytest.raises(TimeoutError):
             await script.send_email(mock_client, "sender@example.com", MagicMock())
 
 
