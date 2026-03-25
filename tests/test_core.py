@@ -261,3 +261,56 @@ class TestMain:
         script.main()
 
         mock_exit.assert_called_once_with(1)
+
+    @patch("send_deployment_notification.sys.exit")
+    @patch(
+        "send_deployment_notification.initialize_graph_client",
+        side_effect=CredentialUnavailableError(message="missing creds"),
+    )
+    @patch("send_deployment_notification.prepare_recipients")
+    @patch("send_deployment_notification.prepare_email_content")
+    def test_exits_on_credential_unavailable(
+        self,
+        mock_content,
+        mock_recipients,
+        mock_graph,
+        mock_exit,
+        mock_env_vars,
+    ):
+        """Should call sys.exit(1) when Azure credentials are unavailable."""
+        mock_content.return_value = ("Subject", "Body")
+        mock_recipients.return_value = [MagicMock()]
+
+        script.main()
+
+        mock_exit.assert_called_once_with(1)
+
+    @patch("send_deployment_notification.sys.exit")
+    @patch(
+        "send_deployment_notification.asyncio.run",
+        side_effect=HttpResponseError(message="forbidden"),
+    )
+    @patch("send_deployment_notification.send_email", new=MagicMock())
+    @patch("send_deployment_notification.prepare_email_request")
+    @patch("send_deployment_notification.initialize_graph_client")
+    @patch("send_deployment_notification.prepare_recipients")
+    @patch("send_deployment_notification.prepare_email_content")
+    def test_exits_on_http_response_error(
+        self,
+        mock_content,
+        mock_recipients,
+        mock_graph,
+        mock_request,
+        mock_asyncio_run,
+        mock_exit,
+        mock_env_vars,
+    ):
+        """Should call sys.exit(1) when Graph API returns an HTTP error."""
+        mock_content.return_value = ("Subject", "Body")
+        mock_recipients.return_value = [MagicMock()]
+        mock_graph.return_value = MagicMock()
+        mock_request.return_value = MagicMock()
+
+        script.main()
+
+        mock_exit.assert_called_once_with(1)
