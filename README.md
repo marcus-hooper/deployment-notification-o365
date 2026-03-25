@@ -19,6 +19,7 @@ A GitHub Action that sends deployment notifications via email using Microsoft Gr
 - Includes repository, environment, timestamp, and recent commit messages
 - Validates recipient email addresses with clear error messages for misconfiguration
 - Automatic retry with exponential backoff for transient errors (429, 503, 504, timeouts)
+- Structured log output with repository and environment context on every log line
 - Cross-platform (runs on Linux, macOS, and Windows runners)
 
 ## Quick Start
