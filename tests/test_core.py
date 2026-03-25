@@ -241,6 +241,17 @@ class TestSendEmail:
         assert mock_user.send_mail.post.await_count == 1
 
     @pytest.mark.asyncio
+    async def test_raises_runtime_error_when_max_retries_is_zero(self):
+        """Should raise RuntimeError if no retries are attempted."""
+        mock_client = MagicMock()
+        mock_user = MagicMock()
+        mock_client.users.by_user_id.return_value = mock_user
+
+        with patch.object(script, "MAX_RETRIES", 0):
+            with pytest.raises(RuntimeError, match="no retries attempted"):
+                await script.send_email(mock_client, "sender@example.com", MagicMock())
+
+    @pytest.mark.asyncio
     @patch("send_deployment_notification.asyncio.sleep", new_callable=AsyncMock)
     async def test_retries_on_timeout_error(self, mock_sleep):
         """Should retry on TimeoutError up to MAX_RETRIES times."""
