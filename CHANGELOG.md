@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Structured logging with repository and environment context on every log line — makes it easy to filter and trace deployment notifications in log aggregators
 - Email input validation in `prepare_recipients()` — rejects missing `@`, multiple `@`, empty local/domain parts, and empty input with clear error messages
 - Retry logic for sending emails with exponential backoff on transient Graph API errors (429, 503, 504, timeouts)
 - Retry-After header support for 429 rate-limit responses
