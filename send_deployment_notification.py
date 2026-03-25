@@ -23,15 +23,19 @@ MAX_RETRIES = 3
 RETRY_BASE_DELAY = 1  # seconds
 NON_RETRYABLE_STATUS_CODES = {400, 401, 403, 404}
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(levelname)s - [%(repo)s %(env)s] %(message)s",
+# Configure logging with defaults so third-party library log lines don't crash
+_LOG_DEFAULTS = {"repo": "unknown", "env": "unknown"}
+_handler = logging.StreamHandler()
+_handler.setFormatter(
+    logging.Formatter(
+        "%(asctime)s - %(levelname)s - [%(repo)s %(env)s] %(message)s",
+        defaults=_LOG_DEFAULTS,
+    )
 )
+logging.basicConfig(level=logging.INFO, handlers=[_handler])
 
 # Module-level logger — replaced by a LoggerAdapter with context in main()
-_default_extra = {"repo": "unknown", "env": "unknown", "actor": "unknown", "recipients": 0}
-logger = logging.LoggerAdapter(logging.getLogger(__name__), extra=_default_extra.copy())
+logger = logging.LoggerAdapter(logging.getLogger(__name__), extra=_LOG_DEFAULTS.copy())
 
 
 # Utility Functions
@@ -222,8 +226,6 @@ def main():
             extra={
                 "repo": github_repository,
                 "env": github_environment,
-                "actor": github_actor,
-                "recipients": len(to_recipients),
             },
         )
 
