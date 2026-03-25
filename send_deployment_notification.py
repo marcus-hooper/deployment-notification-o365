@@ -5,12 +5,14 @@ import os
 import sys
 from zoneinfo import ZoneInfo
 
-from azure.identity import ClientSecretCredential
+from azure.core.exceptions import ClientAuthenticationError, HttpResponseError
+from azure.identity import ClientSecretCredential, CredentialUnavailableError
 from msgraph import GraphServiceClient
 from msgraph.generated.models.body_type import BodyType
 from msgraph.generated.models.email_address import EmailAddress
 from msgraph.generated.models.item_body import ItemBody
 from msgraph.generated.models.message import Message
+from msgraph.generated.models.o_data_errors.o_data_error import ODataError
 from msgraph.generated.models.recipient import Recipient
 from msgraph.generated.users.item.send_mail.send_mail_post_request_body import (
     SendMailPostRequestBody,
@@ -83,8 +85,13 @@ def initialize_graph_client(tenant_id, client_id, client_secret):
         logging.info("Azure credential initialized successfully.")
         scopes = ["https://graph.microsoft.com/.default"]
         return GraphServiceClient(credential, scopes=scopes)
-    except Exception as e:
-        logging.error(f"Failed to initialize Graph client: {e}")
+    except CredentialUnavailableError:
+        logging.error(
+            "Azure credential unavailable: check AZURE_TENANT_ID, AZURE_CLIENT_ID, and AZURE_CLIENT_SECRET"
+        )
+        raise
+    except ClientAuthenticationError:
+        logging.error("Azure authentication rejected by Azure AD")
         raise
 
 
@@ -99,23 +106,29 @@ def prepare_email_request(subject, content, to_recipients):
             ),
             save_to_sent_items=True,
         )
-    except Exception as e:
+    except (TypeError, ValueError) as e:
         logging.error(f"Failed to prepare email request body: {e}")
         raise
 
 
 async def send_email(graph_client, sender, request_body):
     """Async function to send the email."""
-    try:
-        user_request = graph_client.users.by_user_id(sender)
-        if not user_request:
-            logging.error("Failed to get user request.")
-            raise ValueError("User request initialization failed.")
+    user_request = graph_client.users.by_user_id(sender)
+    if not user_request:
+        logging.error("Failed to get user request.")
+        raise ValueError("User request initialization failed.")
 
+    try:
         await user_request.send_mail.post(request_body)
         logging.info("Email sent successfully.")
-    except Exception as e:
-        logging.error(f"Failed to send email: {e}")
+    except HttpResponseError as e:
+        logging.error(f"Graph API HTTP error: {e.status_code} {e.reason}")
+        raise
+    except ODataError as e:
+        logging.error(f"Graph API OData error: {e.error.code if e.error else 'unknown'}")
+        raise
+    except TimeoutError:
+        logging.error("Graph API request timed out")
         raise
 
 
@@ -146,8 +159,17 @@ def main():
 
         # Send the email
         asyncio.run(send_email(graph_client, notification_from, request_body))
-    except Exception as e:
-        logging.error(f"An error occurred while sending the email: {e}")
+    except ValueError as e:
+        logging.error(f"Configuration error: {e}")
+        sys.exit(1)
+    except (CredentialUnavailableError, ClientAuthenticationError) as e:
+        logging.error(f"Authentication failed: {type(e).__name__}")
+        sys.exit(1)
+    except (HttpResponseError, ODataError, TimeoutError) as e:
+        logging.error(f"Failed to send email: {type(e).__name__}")
+        sys.exit(1)
+    except Exception:
+        logging.error("An unexpected error occurred while sending the email")
         sys.exit(1)
 
 

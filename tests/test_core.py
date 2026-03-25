@@ -1,6 +1,8 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from azure.core.exceptions import ClientAuthenticationError, HttpResponseError
+from azure.identity import CredentialUnavailableError
 
 import send_deployment_notification as script
 
@@ -38,16 +40,23 @@ class TestInitializeGraphClient:
         assert result is mock_client
 
     @patch("send_deployment_notification.ClientSecretCredential")
-    def test_raises_on_credential_failure(self, mock_cred_cls):
-        """Should propagate exception when credential creation fails."""
-        mock_cred_cls.side_effect = ValueError("bad creds")
-        with pytest.raises(ValueError, match="bad creds"):
+    def test_raises_on_credential_unavailable(self, mock_cred_cls):
+        """Should propagate CredentialUnavailableError when credentials are missing."""
+        mock_cred_cls.side_effect = CredentialUnavailableError(message="bad creds")
+        with pytest.raises(CredentialUnavailableError):
+            script.initialize_graph_client("tid", "cid", "csecret")
+
+    @patch("send_deployment_notification.ClientSecretCredential")
+    def test_raises_on_client_auth_error(self, mock_cred_cls):
+        """Should propagate ClientAuthenticationError when authentication is rejected."""
+        mock_cred_cls.side_effect = ClientAuthenticationError(message="auth rejected")
+        with pytest.raises(ClientAuthenticationError):
             script.initialize_graph_client("tid", "cid", "csecret")
 
     @patch("send_deployment_notification.GraphServiceClient")
     @patch("send_deployment_notification.ClientSecretCredential")
-    def test_raises_on_graph_client_failure(self, mock_cred_cls, mock_graph_cls):
-        """Should propagate exception when GraphServiceClient creation fails."""
+    def test_does_not_catch_unexpected_exceptions(self, mock_cred_cls, mock_graph_cls):
+        """Should let unexpected exceptions propagate uncaught."""
         mock_graph_cls.side_effect = RuntimeError("graph init failed")
         with pytest.raises(RuntimeError, match="graph init failed"):
             script.initialize_graph_client("tid", "cid", "csecret")
@@ -132,14 +141,39 @@ class TestSendEmail:
             await script.send_email(mock_client, "sender@example.com", MagicMock())
 
     @pytest.mark.asyncio
-    async def test_raises_on_post_failure(self):
-        """Should propagate exception when send_mail.post fails."""
+    async def test_raises_on_http_response_error(self):
+        """Should propagate HttpResponseError from Graph API."""
         mock_client = MagicMock()
         mock_user = MagicMock()
-        mock_user.send_mail.post = AsyncMock(side_effect=RuntimeError("send failed"))
+        error = HttpResponseError(message="forbidden")
+        error.status_code = 403
+        error.reason = "Forbidden"
+        mock_user.send_mail.post = AsyncMock(side_effect=error)
         mock_client.users.by_user_id.return_value = mock_user
 
-        with pytest.raises(RuntimeError, match="send failed"):
+        with pytest.raises(HttpResponseError):
+            await script.send_email(mock_client, "sender@example.com", MagicMock())
+
+    @pytest.mark.asyncio
+    async def test_raises_on_odata_error(self):
+        """Should propagate ODataError from Graph API."""
+        mock_client = MagicMock()
+        mock_user = MagicMock()
+        mock_user.send_mail.post = AsyncMock(side_effect=script.ODataError("odata fail"))
+        mock_client.users.by_user_id.return_value = mock_user
+
+        with pytest.raises(script.ODataError):
+            await script.send_email(mock_client, "sender@example.com", MagicMock())
+
+    @pytest.mark.asyncio
+    async def test_raises_on_timeout(self):
+        """Should propagate TimeoutError."""
+        mock_client = MagicMock()
+        mock_user = MagicMock()
+        mock_user.send_mail.post = AsyncMock(side_effect=TimeoutError())
+        mock_client.users.by_user_id.return_value = mock_user
+
+        with pytest.raises(TimeoutError):
             await script.send_email(mock_client, "sender@example.com", MagicMock())
 
 
@@ -223,6 +257,142 @@ class TestMain:
         """Should call sys.exit(1) when graph client initialization fails."""
         mock_content.return_value = ("Subject", "Body")
         mock_recipients.return_value = [MagicMock()]
+
+        script.main()
+
+        mock_exit.assert_called_once_with(1)
+
+    @patch("send_deployment_notification.sys.exit")
+    @patch(
+        "send_deployment_notification.initialize_graph_client",
+        side_effect=CredentialUnavailableError(message="missing creds"),
+    )
+    @patch("send_deployment_notification.prepare_recipients")
+    @patch("send_deployment_notification.prepare_email_content")
+    def test_exits_on_credential_unavailable(
+        self,
+        mock_content,
+        mock_recipients,
+        mock_graph,
+        mock_exit,
+        mock_env_vars,
+    ):
+        """Should call sys.exit(1) when Azure credentials are unavailable."""
+        mock_content.return_value = ("Subject", "Body")
+        mock_recipients.return_value = [MagicMock()]
+
+        script.main()
+
+        mock_exit.assert_called_once_with(1)
+
+    @patch("send_deployment_notification.sys.exit")
+    @patch(
+        "send_deployment_notification.initialize_graph_client",
+        side_effect=ClientAuthenticationError(message="auth rejected"),
+    )
+    @patch("send_deployment_notification.prepare_recipients")
+    @patch("send_deployment_notification.prepare_email_content")
+    def test_exits_on_client_auth_error(
+        self,
+        mock_content,
+        mock_recipients,
+        mock_graph,
+        mock_exit,
+        mock_env_vars,
+    ):
+        """Should call sys.exit(1) when Azure AD rejects authentication."""
+        mock_content.return_value = ("Subject", "Body")
+        mock_recipients.return_value = [MagicMock()]
+
+        script.main()
+
+        mock_exit.assert_called_once_with(1)
+
+    @patch("send_deployment_notification.sys.exit")
+    @patch(
+        "send_deployment_notification.asyncio.run",
+        side_effect=HttpResponseError(message="forbidden"),
+    )
+    @patch("send_deployment_notification.send_email", new=MagicMock())
+    @patch("send_deployment_notification.prepare_email_request")
+    @patch("send_deployment_notification.initialize_graph_client")
+    @patch("send_deployment_notification.prepare_recipients")
+    @patch("send_deployment_notification.prepare_email_content")
+    def test_exits_on_http_response_error(
+        self,
+        mock_content,
+        mock_recipients,
+        mock_graph,
+        mock_request,
+        mock_asyncio_run,
+        mock_exit,
+        mock_env_vars,
+    ):
+        """Should call sys.exit(1) when Graph API returns an HTTP error."""
+        mock_content.return_value = ("Subject", "Body")
+        mock_recipients.return_value = [MagicMock()]
+        mock_graph.return_value = MagicMock()
+        mock_request.return_value = MagicMock()
+
+        script.main()
+
+        mock_exit.assert_called_once_with(1)
+
+    @patch("send_deployment_notification.sys.exit")
+    @patch(
+        "send_deployment_notification.asyncio.run",
+        side_effect=script.ODataError("odata fail"),
+    )
+    @patch("send_deployment_notification.send_email", new=MagicMock())
+    @patch("send_deployment_notification.prepare_email_request")
+    @patch("send_deployment_notification.initialize_graph_client")
+    @patch("send_deployment_notification.prepare_recipients")
+    @patch("send_deployment_notification.prepare_email_content")
+    def test_exits_on_odata_error(
+        self,
+        mock_content,
+        mock_recipients,
+        mock_graph,
+        mock_request,
+        mock_asyncio_run,
+        mock_exit,
+        mock_env_vars,
+    ):
+        """Should call sys.exit(1) when Graph API returns an OData error."""
+        mock_content.return_value = ("Subject", "Body")
+        mock_recipients.return_value = [MagicMock()]
+        mock_graph.return_value = MagicMock()
+        mock_request.return_value = MagicMock()
+
+        script.main()
+
+        mock_exit.assert_called_once_with(1)
+
+    @patch("send_deployment_notification.sys.exit")
+    @patch(
+        "send_deployment_notification.asyncio.run",
+        side_effect=TimeoutError(),
+    )
+    @patch("send_deployment_notification.send_email", new=MagicMock())
+    @patch("send_deployment_notification.prepare_email_request")
+    @patch("send_deployment_notification.initialize_graph_client")
+    @patch("send_deployment_notification.prepare_recipients")
+    @patch("send_deployment_notification.prepare_email_content")
+    def test_exits_on_timeout_error(
+        self,
+        mock_content,
+        mock_recipients,
+        mock_graph,
+        mock_request,
+        mock_asyncio_run,
+        mock_exit,
+        mock_env_vars,
+    ):
+        """Should call sys.exit(1) when Graph API request times out."""
+        mock_content.return_value = ("Subject", "Body")
+        mock_recipients.return_value = [MagicMock()]
+        mock_graph.return_value = MagicMock()
+        mock_request.return_value = MagicMock()
 
         script.main()
 

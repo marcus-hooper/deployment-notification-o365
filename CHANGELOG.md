@@ -10,9 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Unit tests for core functions: `initialize_graph_client`, `prepare_email_request`, `send_email`, and `main` orchestration
+- Test coverage for named exception handling: `CredentialUnavailableError`, `ClientAuthenticationError`, `HttpResponseError`, `ODataError`, and `TimeoutError`
 
 ### Changed
 
+- Replace broad `except Exception` handlers with named exceptions for Azure authentication and Graph API errors
 - Update GitHub workflows, templates, and Dependabot configuration
 - Bump bandit[sarif] from 1.9.2 to 1.9.3
 - Add setuptools as explicit dependency to prevent Dependabot removal

@@ -17,6 +17,8 @@ mock_modules = [
     "msgraph.generated.models.body_type",
     "msgraph.generated.models.recipient",
     "msgraph.generated.models.email_address",
+    "msgraph.generated.models.o_data_errors",
+    "msgraph.generated.models.o_data_errors.o_data_error",
 ]
 
 for mod_name in mock_modules:
@@ -34,9 +36,16 @@ class MockRecipient:
         self.email_address = email_address
 
 
+class MockODataError(Exception):
+    def __init__(self, *args, error=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.error = error
+
+
 # Patch the mocked modules with our test-friendly versions
 sys.modules["msgraph.generated.models.email_address"].EmailAddress = MockEmailAddress
 sys.modules["msgraph.generated.models.recipient"].Recipient = MockRecipient
+sys.modules["msgraph.generated.models.o_data_errors.o_data_error"].ODataError = MockODataError
 
 import pytest  # noqa: E402
 
