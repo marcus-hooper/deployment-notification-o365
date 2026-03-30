@@ -120,7 +120,7 @@ jobs:
           mv results.tmp results.sarif
 
       - name: Upload to Code Scanning
-        uses: github/codeql-action/upload-sarif@eedab83377f873ae39009d167a89b7a5aab4638b # v4
+        uses: github/codeql-action/upload-sarif@a899987af240c0578ed84ce13c02319a693e168f # v4
         with:
           sarif_file: results.sarif
           category: scorecard
