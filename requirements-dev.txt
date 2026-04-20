@@ -161,9 +161,9 @@ azure-core==1.38.0 \
     #   -r requirements.txt
     #   azure-identity
     #   microsoft-kiota-authentication-azure
-azure-identity==1.25.2 \
-    --hash=sha256:030dbaa720266c796221c6cdbd1999b408c079032c919fef725fcc348a540fe9 \
-    --hash=sha256:1b40060553d01a72ba0d708b9a46d0f61f56312e215d8896d836653ffdc6753d
+azure-identity==1.25.3 \
+    --hash=sha256:ab23c0d63015f50b630ef6c6cf395e7262f439ce06e5d07a64e874c724f8d9e6 \
+    --hash=sha256:f4d0b956a8146f30333e071374171f3cfa7bdb8073adb8c3814b65567aa7447c
     # via
     #   -r requirements.txt
     #   msgraph-sdk
@@ -906,9 +906,9 @@ microsoft-kiota-serialization-text==1.9.8 \
     # via
     #   -r requirements.txt
     #   msgraph-sdk
-msal==1.34.0 \
-    --hash=sha256:76ba83b716ea5a6d75b0279c0ac353a0e05b820ca1f6682c0eb7f45190c43c2f \
-    --hash=sha256:f669b1644e4950115da7a176441b0e13ec2975c29528d8b9e81316023676d6e1
+msal==1.36.0 \
+    --hash=sha256:36ecac30e2ff4322d956029aabce3c82301c29f0acb1ad89b94edcabb0e58ec4 \
+    --hash=sha256:3f6a4af2b036b476a4215111c4297b4e6e236ed186cd804faefba23e4990978b
     # via
     #   -r requirements.txt
     #   azure-identity
@@ -989,9 +989,9 @@ msgraph-core==1.3.8 \
     # via
     #   -r requirements.txt
     #   msgraph-sdk
-msgraph-sdk==1.55.0 \
-    --hash=sha256:6df691a31954a050d26b8a678968017e157d940fb377f2a8a4e17a9741b98756 \
-    --hash=sha256:c8e68ebc4b88af5111de312e7fa910a4e76ddf48a4534feadb1fb8a411c48cfc
+msgraph-sdk==1.56.0 \
+    --hash=sha256:5c3f8efd4d45672b36f04acc5faca19cedc554cfd9c95d925459e948cacef35b \
+    --hash=sha256:9afe06413aed910095dd95de7a5d2d1ea14d6734cc68b778acdb2d9930bdafdc
     # via -r requirements.txt
 multidict==6.7.0 \
     --hash=sha256:03ca744319864e92721195fa28c7a3b2bc7b686246b35e4078c1e4d0eb5466d3 \
