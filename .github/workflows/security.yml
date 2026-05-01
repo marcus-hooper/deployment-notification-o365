@@ -130,7 +130,9 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements-dev.txt') }}
 
       - name: Install dependencies
-        run: pip install --require-hashes -r requirements-dev.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install --require-hashes -r requirements-dev.txt
 
       - name: Run Bandit security scanner
         run: |
@@ -141,7 +143,7 @@ jobs:
           echo "Security scan complete"
 
       - name: Upload Bandit SARIF to Security tab
-        uses: github/codeql-action/upload-sarif@eedab83377f873ae39009d167a89b7a5aab4638b # v4
+        uses: github/codeql-action/upload-sarif@a899987af240c0578ed84ce13c02319a693e168f # v4
         if: always()
         with:
           sarif_file: bandit-results.sarif
@@ -194,7 +196,9 @@ jobs:
           key: ${{ runner.os }}-pip-${{ hashFiles('requirements-dev.txt') }}
 
       - name: Install dependencies
-        run: pip install --require-hashes -r requirements-dev.txt
+        run: |
+          python -m pip install --upgrade pip
+          pip install --require-hashes -r requirements-dev.txt
 
       - name: Run pip-audit
         run: |
