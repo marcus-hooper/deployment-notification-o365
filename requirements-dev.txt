@@ -858,9 +858,9 @@ mdurl==0.1.2 \
     --hash=sha256:84008a41e51615a49fc9966191ff91509e3c40b939176e643fd50a5c2196b8f8 \
     --hash=sha256:bb413d29f5eea38f31dd4754dd7377d4465116fb207585f97bf925588687c1ba
     # via markdown-it-py
-microsoft-kiota-abstractions==1.9.8 \
-    --hash=sha256:920cbe280fb827e8839c6dbe3cd3233b1d7308d204847d82797717d1160356c6 \
-    --hash=sha256:bb3243ce776dc0197cb006289a6f0b8a0db699b3885206adde7e6a76c17904a1
+microsoft-kiota-abstractions==1.9.10 \
+    --hash=sha256:8eb62d64c35ad0eeb4e8bcdbb143c0b308dc4a494e757f8e44cb959d34f44ecf \
+    --hash=sha256:cd169067ebe48e6feea1258630807034239e0c61c2abe5fd66896a58177e8f05
     # via
     #   -r requirements.txt
     #   microsoft-kiota-authentication-azure
@@ -876,9 +876,9 @@ microsoft-kiota-authentication-azure==1.9.8 \
     # via
     #   -r requirements.txt
     #   msgraph-core
-microsoft-kiota-http==1.9.8 \
-    --hash=sha256:01c4afe3ea61184b20053ad1d59d277e8c53fc1766d1b4d7b20a61d8c2883ce5 \
-    --hash=sha256:d632a8283bce707b0efa75517a0da92cdd0d81204246f06b164f4e72d99eb20a
+microsoft-kiota-http==1.9.9 \
+    --hash=sha256:a5b1b217ac9afeb4054f12515417e3b1d2be12a9385a70a41d18d64379ea2e7e \
+    --hash=sha256:ae672b145df71b644f8da0951767a12a4ce47a40576d86eba19b7c22d9e160f9
     # via
     #   -r requirements.txt
     #   msgraph-core
