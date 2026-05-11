@@ -989,9 +989,9 @@ msgraph-core==1.3.8 \
     # via
     #   -r requirements.txt
     #   msgraph-sdk
-msgraph-sdk==1.56.0 \
-    --hash=sha256:5c3f8efd4d45672b36f04acc5faca19cedc554cfd9c95d925459e948cacef35b \
-    --hash=sha256:9afe06413aed910095dd95de7a5d2d1ea14d6734cc68b778acdb2d9930bdafdc
+msgraph-sdk==1.57.0 \
+    --hash=sha256:2e4881fbfe4b3982ac2368a41da036f366b8ef6ad8f550dec2f9bf9459eaa976 \
+    --hash=sha256:aed0bdbf62b00ac12cce7adccd0fe08d2b96d30856d27cdc2e829756cd7b7a60
     # via -r requirements.txt
 multidict==6.7.0 \
     --hash=sha256:03ca744319864e92721195fa28c7a3b2bc7b686246b35e4078c1e4d0eb5466d3 \
