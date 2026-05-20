@@ -143,7 +143,7 @@ jobs:
           echo "Security scan complete"
 
       - name: Upload Bandit SARIF to Security tab
-        uses: github/codeql-action/upload-sarif@868e2ea5641bfa2e2af1f144664178b4c5575fab # v4
+        uses: github/codeql-action/upload-sarif@c5297a28a2c3e6a8062041b58858bd7117cebe37 # v4
         if: always()
         with:
           sarif_file: bandit-results.sarif
