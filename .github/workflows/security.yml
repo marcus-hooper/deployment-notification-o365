@@ -15,8 +15,8 @@ on:
       - 'docs/**'
       - '.github/*.md'
   schedule:
-    # Run weekly on Wednesday at 6:00 UTC
-    - cron: "0 6 * * 3"
+    # Run daily at 6:00 UTC
+    - cron: "0 6 * * *"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
