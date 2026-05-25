@@ -637,9 +637,9 @@ msgraph-core==1.3.8 \
     --hash=sha256:6e883f9d4c4ad57501234749e07b010478c1a5f19550ef4cf005bbcac4a63ae7 \
     --hash=sha256:86d83edcf62119946f201d13b7e857c947ef67addb088883940197081de85bea
     # via msgraph-sdk
-msgraph-sdk==1.57.0 \
-    --hash=sha256:2e4881fbfe4b3982ac2368a41da036f366b8ef6ad8f550dec2f9bf9459eaa976 \
-    --hash=sha256:aed0bdbf62b00ac12cce7adccd0fe08d2b96d30856d27cdc2e829756cd7b7a60
+msgraph-sdk==1.58.0 \
+    --hash=sha256:9fdaab5af2288d69fbf3fef82c203d3911f6c314aeac15c6d29bb14aeb1bb5c8 \
+    --hash=sha256:beee4dda22dd8e709a33871fd9aadfcac908a1870a2dab9350734616b59403b1
     # via -r requirements.in
 multidict==6.7.0 \
     --hash=sha256:03ca744319864e92721195fa28c7a3b2bc7b686246b35e4078c1e4d0eb5466d3 \
