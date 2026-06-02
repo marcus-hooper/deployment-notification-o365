@@ -160,7 +160,7 @@ def _get_retry_delay(error, attempt):
         if retry_after:
             try:
                 return int(retry_after)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 pass
     return RETRY_BASE_DELAY * (2**attempt)
 

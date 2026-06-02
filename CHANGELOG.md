@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **BREAKING**: Require Python 3.14+ — bump the action runtime, CI matrix, and `requires-python` floor (previously 3.13 runtime / 3.11 floor); source now uses PEP 758 parenthesis-free `except` syntax, which is a `SyntaxError` on Python 3.13 and earlier
 - Replace broad `except Exception` handlers with named exceptions for Azure authentication and Graph API errors
 - Update GitHub workflows, templates, and Dependabot configuration
 - Bump bandit[sarif] from 1.9.2 to 1.9.3
@@ -27,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Repository URL in project configuration
+
+### Security
+
+- Bump `pyjwt` from 2.12.1 to 2.13.0 to resolve PYSEC-2026-175/177/178/179 (JWK/HMAC algorithm confusion, `PyJWKClient` SSRF and unbounded JWKS fetch, and detached-JWS denial of service)
 
 ## [1.1.0] - 2026-01-18
 

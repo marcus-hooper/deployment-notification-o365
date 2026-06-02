@@ -6,7 +6,7 @@ Thank you for your interest in contributing to deployment-notification-o365!
 
 ### Prerequisites
 
-- Python 3.13+
+- Python 3.14+
 - Git
 - GitHub CLI (`gh`) - recommended for releases
 
