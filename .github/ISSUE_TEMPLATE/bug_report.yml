@@ -119,7 +119,7 @@ body:
     attributes:
       label: Python Version
       description: The Python version shown in the workflow logs
-      placeholder: "3.13"
+      placeholder: "3.14"
     validations:
       required: false
 
