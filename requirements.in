@@ -1,3 +1,7 @@
 # Production dependencies
 azure-identity>=1.25.0,<2.0.0
 msgraph-sdk>=1.52.0,<2.0.0
+
+# pyjwt is transitive via msal; pin >=2.13.0 to clear PYSEC-2026-175/177/178/179
+# (HMAC/JWK confusion, PyJWKClient SSRF + unbounded fetch, detached-JWS DoS).
+pyjwt[crypto]>=2.13.0
