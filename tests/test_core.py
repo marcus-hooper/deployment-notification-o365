@@ -368,6 +368,34 @@ class TestMain:
         mock_request.assert_called_once()
         mock_asyncio_run.assert_called_once()
 
+    @patch("send_deployment_notification.asyncio.run")
+    @patch("send_deployment_notification.send_email", new=MagicMock())
+    @patch("send_deployment_notification.prepare_email_request")
+    @patch("send_deployment_notification.initialize_graph_client")
+    @patch("send_deployment_notification.prepare_recipients")
+    @patch("send_deployment_notification.prepare_email_content")
+    def test_main_sets_logging_context(
+        self,
+        mock_content,
+        mock_recipients,
+        mock_graph,
+        mock_request,
+        mock_asyncio_run,
+        mock_env_vars,
+    ):
+        """Should set LoggerAdapter extra with repo, env, actor, and recipients count."""
+        mock_content.return_value = ("Subject", "Body")
+        mock_recipients.return_value = [MagicMock(), MagicMock()]
+        mock_graph.return_value = MagicMock()
+        mock_request.return_value = MagicMock()
+
+        script.main()
+
+        assert script.logger.extra["repo"] == "owner/test-repo"
+        assert script.logger.extra["env"] == "production"
+        assert script.logger.extra["actor"] == "testuser"
+        assert script.logger.extra["recipients"] == 2
+
     @patch("send_deployment_notification.sys.exit")
     def test_exits_on_missing_env_var(self, mock_exit, clean_env):
         """Should call sys.exit(1) when a required env var is missing."""
