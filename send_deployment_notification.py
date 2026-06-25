@@ -24,11 +24,11 @@ RETRY_BASE_DELAY = 1  # seconds
 NON_RETRYABLE_STATUS_CODES = {400, 401, 403, 404}
 
 # Configure logging with defaults so third-party library log lines don't crash
-_LOG_DEFAULTS = {"repo": "unknown", "env": "unknown"}
+_LOG_DEFAULTS = {"repo": "unknown", "env": "unknown", "actor": "unknown", "recipients": 0}
 _handler = logging.StreamHandler()
 _handler.setFormatter(
     logging.Formatter(
-        "%(asctime)s - %(levelname)s - [%(repo)s %(env)s] %(message)s",
+        "%(asctime)s - %(levelname)s - [%(repo)s %(env)s %(actor)s %(recipients)s] %(message)s",
         defaults=_LOG_DEFAULTS,
     )
 )
@@ -226,6 +226,8 @@ def main():
             extra={
                 "repo": github_repository,
                 "env": github_environment,
+                "actor": github_actor,
+                "recipients": len(to_recipients),
             },
         )
 
