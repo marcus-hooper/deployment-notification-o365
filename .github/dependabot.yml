@@ -70,15 +70,15 @@ updates:
     rebase-strategy: "auto"
     groups:
       # Security-related actions - prioritize these
+      # No update-types filter: keep ALL update types (including digest and major)
+      # grouped so github/codeql-action sub-actions (init/analyze/upload-sarif)
+      # always bump together in one PR and stay version-synced (CodeQL requires it).
       security-actions:
         patterns:
           - "ossf/*"
           - "github/codeql-action"
           - "step-security/*"
           - "gitleaks/*"
-        update-types:
-          - "minor"
-          - "patch"
       # CI/CD actions
       ci-actions:
         patterns:
