@@ -18,7 +18,7 @@ pip-audit>=2.7.0
 
 # Transitive dependencies (pinned to prevent Dependabot from removing them)
 # setuptools is required by pbr, which is required by stevedore, which is required by bandit
-setuptools>=80.0.0
+setuptools>=83.0.0
 
 # pip is pulled in transitively by pip-api (a pip-audit dep). Force >=26.1 so the
 # lockfile doesn't pin the CVE-2026-3219-vulnerable pip 26.0.1.
