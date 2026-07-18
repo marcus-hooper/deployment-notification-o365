@@ -76,7 +76,7 @@ updates:
       security-actions:
         patterns:
           - "ossf/*"
-          - "github/codeql-action"
+          - "github/codeql-action*"
           - "step-security/*"
           - "gitleaks/*"
       # CI/CD actions
@@ -96,7 +96,7 @@ updates:
           - "*"
         exclude-patterns:
           - "ossf/*"
-          - "github/codeql-action"
+          - "github/codeql-action*"
           - "step-security/*"
           - "gitleaks/*"
           - "actions/*"
