@@ -23,3 +23,11 @@ setuptools>=83.0.0
 # pip is pulled in transitively by pip-api (a pip-audit dep). Force >=26.1 so the
 # lockfile doesn't pin the CVE-2026-3219-vulnerable pip 26.0.1.
 pip>=26.1.2
+
+# colorama is a Windows-only dep of pytest and bandit (sys_platform == "win32").
+# pip-compile resolves for the platform it runs on and drops requirements whose
+# markers are false there, so a Linux-compiled lockfile omits it entirely and
+# `pip install --require-hashes -r requirements-dev.txt` then fails on Windows.
+# Declared unconditionally so it is pinned and hashed no matter where the lockfile
+# is compiled; it is a pure-Python no-op on non-Windows platforms.
+colorama>=0.4.6
