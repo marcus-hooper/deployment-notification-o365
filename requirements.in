@@ -9,4 +9,4 @@ pyjwt[crypto]>=2.13.0
 # cryptography is transitive via azure-identity/msal/pyjwt; pin >=50.0.0 to clear
 # CVE-2026-69247/69248/69249 (PKCS#7 Bleichenbacher oracle, name-constraint
 # bypass, chain-building DoS). Requires msal>=1.37.0, which lifted its <49 cap.
-cryptography>=50.0.0
+cryptography>=50.0.1
