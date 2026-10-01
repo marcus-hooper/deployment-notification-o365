@@ -10,3 +10,8 @@ pyjwt[crypto]>=2.15.0
 # CVE-2026-69247/69248/69249 (PKCS#7 Bleichenbacher oracle, name-constraint
 # bypass, chain-building DoS). Requires msal>=1.37.0, which lifted its <49 cap.
 cryptography>=50.0.1
+
+# urllib3 is transitive via requests; pin >=2.8.0 to clear CVE-2026-97687/97688/97689
+# (HTTPS proxy TLS config confusion, deflate streaming infinite loop, unbounded
+# chunk-size buffering).
+urllib3>=2.8.0
